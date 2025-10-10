@@ -6,8 +6,9 @@
 import { RecipeStatsBar } from "@/components/RecipeStatsBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FieldLabel } from "@/components/ui/field";
 import {
   Select,
   SelectContent,
@@ -105,16 +106,16 @@ export default function RecipeEditorPage({
               <CardTitle>Recipe Info</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="name">Recipe Name</Label>
+              <Field>
+                <FieldLabel htmlFor="name">Recipe Name</FieldLabel>
                 <Input id="name" defaultValue={mockRecipe.name} />
-              </div>
-              <div>
-                <Label htmlFor="style">Style</Label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="style">Style</FieldLabel>
                 <Input id="style" defaultValue={mockRecipe.style} />
-              </div>
-              <div>
-                <Label htmlFor="method">Method</Label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="method">Method</FieldLabel>
                 <Select defaultValue={mockRecipe.method}>
                   <SelectTrigger>
                     <SelectValue />
@@ -125,42 +126,42 @@ export default function RecipeEditorPage({
                     <SelectItem value="partial">Partial Mash</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </Field>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="batchSize">Batch Size (L)</Label>
+                <Field>
+                  <FieldLabel htmlFor="batchSize">Batch Size (L)</FieldLabel>
                   <Input
                     id="batchSize"
                     type="number"
                     defaultValue={mockRecipe.batchSizeL}
                   />
-                </div>
-                <div>
-                  <Label htmlFor="boilSize">Boil Size (L)</Label>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="boilSize">Boil Size (L)</FieldLabel>
                   <Input
                     id="boilSize"
                     type="number"
                     defaultValue={mockRecipe.boilSizeL}
                   />
-                </div>
+                </Field>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="efficiency">Efficiency (%)</Label>
+                <Field>
+                  <FieldLabel htmlFor="efficiency">Efficiency (%)</FieldLabel>
                   <Input
                     id="efficiency"
                     type="number"
                     defaultValue={mockRecipe.efficiency}
                   />
-                </div>
-                <div>
-                  <Label htmlFor="boilTime">Boil Time (min)</Label>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="boilTime">Boil Time (min)</FieldLabel>
                   <Input
                     id="boilTime"
                     type="number"
                     defaultValue={mockRecipe.boilTimeMin}
                   />
-                </div>
+                </Field>
               </div>
             </CardContent>
           </Card>
@@ -223,7 +224,7 @@ export default function RecipeEditorPage({
                     <Input type="number" defaultValue="65" placeholder="°C" />
                   </div>
                   <div className="flex-1">
-                    <Label>Single Infusion</Label>
+                    <FieldLabel>Single Infusion</FieldLabel>
                   </div>
                   <div className="w-20">
                     <Input type="number" defaultValue="60" placeholder="min" />
@@ -244,27 +245,24 @@ export default function RecipeEditorPage({
             <CardHeader>
               <CardTitle>Yeast</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <Select defaultValue="us-05">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="us-05">US-05 (Safale)</SelectItem>
-                      <SelectItem value="s-04">S-04 (Safale)</SelectItem>
-                      <SelectItem value="wlp001">
-                        WLP001 (White Labs)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="pitchAmount">Pitch Amount (g)</Label>
-                  <Input id="pitchAmount" type="number" placeholder="11" />
-                </div>
-              </div>
+            <CardContent className="space-y-4">
+              <Field>
+                <FieldLabel>Yeast Strain</FieldLabel>
+                <Select defaultValue="us-05">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="us-05">US-05 (Safale)</SelectItem>
+                    <SelectItem value="s-04">S-04 (Safale)</SelectItem>
+                    <SelectItem value="wlp001">WLP001 (White Labs)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="pitchAmount">Pitch Amount (g)</FieldLabel>
+                <Input id="pitchAmount" type="number" placeholder="11" />
+              </Field>
             </CardContent>
           </Card>
 
@@ -273,25 +271,21 @@ export default function RecipeEditorPage({
             <CardHeader>
               <CardTitle>Priming</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="fermentationTemp">
-                    Fermentation Temp (°C)
-                  </Label>
-                  <Input
-                    id="fermentationTemp"
-                    type="number"
-                    defaultValue={mockRecipe.fermentationTempC}
-                  />
-                </div>
-                <div className="p-3 bg-muted rounded-lg">
-                  <div className="text-sm space-y-1">
-                    <div>Priming Sugar: {stats.primingSugar.amountG}g</div>
-                    <div>
-                      Target CO₂: {stats.primingSugar.co2Volumes} volumes
-                    </div>
-                  </div>
+            <CardContent className="space-y-4">
+              <Field>
+                <FieldLabel htmlFor="fermentationTemp">
+                  Fermentation Temp (°C)
+                </FieldLabel>
+                <Input
+                  id="fermentationTemp"
+                  type="number"
+                  defaultValue={mockRecipe.fermentationTempC}
+                />
+              </Field>
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="text-sm space-y-1">
+                  <div>Priming Sugar: {stats.primingSugar.amountG}g</div>
+                  <div>Target CO₂: {stats.primingSugar.co2Volumes} volumes</div>
                 </div>
               </div>
             </CardContent>

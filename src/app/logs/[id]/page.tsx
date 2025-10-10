@@ -6,7 +6,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -51,7 +51,7 @@ export default function BrewLogPage({ params }: { params: { id: string } }) {
         <div className="flex items-center gap-4">
           <Link href={`/recipes/${brewLog.recipeId}/logs`}>
             <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft />
               Back to Logs
             </Button>
           </Link>
@@ -59,14 +59,14 @@ export default function BrewLogPage({ params }: { params: { id: string } }) {
             <h1 className="text-3xl font-bold">
               {brewLog.recipeName} - Brew Log
             </h1>
-            <p className="text-muted-foreground">
-              <Calendar className="w-4 h-4 inline mr-2" />
+            <p className="text-muted-foreground flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
               {new Date(brewLog.brewDate).toLocaleDateString()}
             </p>
           </div>
         </div>
         <Button>
-          <Save className="w-4 h-4 mr-2" />
+          <Save />
           Save Log
         </Button>
       </div>
@@ -81,8 +81,8 @@ export default function BrewLogPage({ params }: { params: { id: string } }) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="measuredOG">Measured OG</Label>
+                <Field>
+                  <FieldLabel htmlFor="measuredOG">Measured OG</FieldLabel>
                   <Input
                     id="measuredOG"
                     type="number"
@@ -90,9 +90,9 @@ export default function BrewLogPage({ params }: { params: { id: string } }) {
                     defaultValue={brewLog.measuredOG}
                     placeholder="1.060"
                   />
-                </div>
-                <div>
-                  <Label htmlFor="measuredFG">Measured FG</Label>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="measuredFG">Measured FG</FieldLabel>
                   <Input
                     id="measuredFG"
                     type="number"
@@ -100,7 +100,7 @@ export default function BrewLogPage({ params }: { params: { id: string } }) {
                     defaultValue={brewLog.measuredFG}
                     placeholder="1.012"
                   />
-                </div>
+                </Field>
               </div>
               <div className="p-3 bg-muted rounded-lg">
                 <div className="text-sm">
@@ -117,17 +117,17 @@ export default function BrewLogPage({ params }: { params: { id: string } }) {
               <CardTitle>Fermentation</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="fermentationTemp">
+              <Field>
+                <FieldLabel htmlFor="fermentationTemp">
                   Fermentation Temperature (°C)
-                </Label>
+                </FieldLabel>
                 <Input
                   id="fermentationTemp"
                   type="number"
                   defaultValue={brewLog.fermentationTempC}
                   placeholder="20"
                 />
-              </div>
+              </Field>
             </CardContent>
           </Card>
 
@@ -144,12 +144,12 @@ export default function BrewLogPage({ params }: { params: { id: string } }) {
                       id={issue}
                       defaultChecked={brewLog.issues.includes(issue)}
                     />
-                    <Label
+                    <FieldLabel
                       htmlFor={issue}
                       className="text-sm font-normal capitalize"
                     >
                       {issue.replace("-", " ")}
-                    </Label>
+                    </FieldLabel>
                   </div>
                 ))}
               </div>

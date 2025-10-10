@@ -4,6 +4,7 @@
  */
 
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
   Card,
   CardContent,
@@ -13,6 +14,14 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+} from "@/components/ui/empty";
+import {
   Table,
   TableBody,
   TableCell,
@@ -20,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Calendar, Eye } from "lucide-react";
+import { Plus, Calendar, Eye, ClipboardList } from "lucide-react";
 import Link from "next/link";
 
 // Mock data
@@ -66,17 +75,17 @@ export default function RecipeLogsPage({ params }: { params: { id: string } }) {
             Track your brewing sessions and outcomes
           </p>
         </div>
-        <div className="flex gap-2">
+        <ButtonGroup>
           <Link href={`/recipes/${recipe.id}`}>
             <Button variant="outline">Back to Recipe</Button>
           </Link>
           <Link href={`/recipes/${recipe.id}/logs/new`}>
             <Button>
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus />
               New Brew Log
             </Button>
           </Link>
-        </div>
+        </ButtonGroup>
       </div>
 
       {/* Brew Logs Table */}
@@ -107,8 +116,8 @@ export default function RecipeLogsPage({ params }: { params: { id: string } }) {
                 {brewLogs.map((log) => (
                   <TableRow key={log.id}>
                     <TableCell>
-                      <div className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-2" />
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
                         {new Date(log.brewDate).toLocaleDateString()}
                       </div>
                     </TableCell>
@@ -146,8 +155,8 @@ export default function RecipeLogsPage({ params }: { params: { id: string } }) {
                     </TableCell>
                     <TableCell>
                       <Link href={`/logs/${log.id}`}>
-                        <Button size="sm" variant="outline">
-                          <Eye className="w-4 h-4" />
+                        <Button size="icon-sm" variant="outline">
+                          <Eye />
                         </Button>
                       </Link>
                     </TableCell>
@@ -158,25 +167,25 @@ export default function RecipeLogsPage({ params }: { params: { id: string } }) {
           </CardContent>
         </Card>
       ) : (
-        <Card className="text-center py-12">
-          <CardContent>
-            <div className="space-y-4">
-              <div className="text-6xl">📊</div>
-              <div>
-                <h3 className="text-lg font-semibold">No brew logs yet</h3>
-                <p className="text-muted-foreground">
-                  Start brewing this recipe and log your first session
-                </p>
-              </div>
-              <Link href={`/recipes/${recipe.id}/logs/new`}>
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create First Log
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <ClipboardList />
+            </EmptyMedia>
+            <EmptyTitle>No brew logs yet</EmptyTitle>
+            <EmptyDescription>
+              Start brewing this recipe and log your first session
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Link href={`/recipes/${recipe.id}/logs/new`}>
+              <Button>
+                <Plus />
+                Create First Log
+              </Button>
+            </Link>
+          </EmptyContent>
+        </Empty>
       )}
     </div>
   );

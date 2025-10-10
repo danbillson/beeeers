@@ -7,7 +7,14 @@ import { RecipeStatsBar } from "@/components/RecipeStatsBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FieldLabel } from "@/components/ui/field";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
 import {
   Select,
   SelectContent,
@@ -16,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, ArrowLeft } from "lucide-react";
+import { Save, ArrowLeft, Wheat, Beer, Thermometer } from "lucide-react";
 import Link from "next/link";
 import { useRecipeCalculations } from "@/hooks/use-recipe-calculations";
 
@@ -61,7 +68,7 @@ export default function NewRecipePage() {
         <div className="flex items-center gap-4">
           <Link href="/recipes">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft />
               Back to Recipes
             </Button>
           </Link>
@@ -71,7 +78,7 @@ export default function NewRecipePage() {
           </div>
         </div>
         <Button>
-          <Save className="w-4 h-4 mr-2" />
+          <Save />
           Save Recipe
         </Button>
       </div>
@@ -86,16 +93,16 @@ export default function NewRecipePage() {
               <CardTitle>Recipe Info</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="name">Recipe Name</Label>
+              <Field>
+                <FieldLabel htmlFor="name">Recipe Name</FieldLabel>
                 <Input id="name" placeholder="e.g., NEIPA 10L Batch" />
-              </div>
-              <div>
-                <Label htmlFor="style">Style</Label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="style">Style</FieldLabel>
                 <Input id="style" placeholder="e.g., New England IPA" />
-              </div>
-              <div>
-                <Label htmlFor="method">Method</Label>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="method">Method</FieldLabel>
                 <Select defaultValue="all-grain">
                   <SelectTrigger>
                     <SelectValue />
@@ -106,26 +113,26 @@ export default function NewRecipePage() {
                     <SelectItem value="partial">Partial Mash</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </Field>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="batchSize">Batch Size (L)</Label>
+                <Field>
+                  <FieldLabel htmlFor="batchSize">Batch Size (L)</FieldLabel>
                   <Input id="batchSize" type="number" defaultValue={10} />
-                </div>
-                <div>
-                  <Label htmlFor="boilSize">Boil Size (L)</Label>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="boilSize">Boil Size (L)</FieldLabel>
                   <Input id="boilSize" type="number" defaultValue={12} />
-                </div>
+                </Field>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="efficiency">Efficiency (%)</Label>
+                <Field>
+                  <FieldLabel htmlFor="efficiency">Efficiency (%)</FieldLabel>
                   <Input id="efficiency" type="number" defaultValue={75} />
-                </div>
-                <div>
-                  <Label htmlFor="boilTime">Boil Time (min)</Label>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="boilTime">Boil Time (min)</FieldLabel>
                   <Input id="boilTime" type="number" defaultValue={60} />
-                </div>
+                </Field>
               </div>
             </CardContent>
           </Card>
@@ -141,14 +148,18 @@ export default function NewRecipePage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <div className="text-4xl mb-2">🌾</div>
-                <p>No fermentables added yet</p>
-                <p className="text-sm">
-                  Add grains, extracts, or other fermentables to start building
-                  your recipe
-                </p>
-              </div>
+              <Empty className="border-0">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Wheat />
+                  </EmptyMedia>
+                  <EmptyTitle>No fermentables added yet</EmptyTitle>
+                  <EmptyDescription>
+                    Add grains, extracts, or other fermentables to start
+                    building your recipe
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             </CardContent>
           </Card>
 
@@ -158,13 +169,17 @@ export default function NewRecipePage() {
               <CardTitle>Mash Schedule</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <div className="text-4xl mb-2">🌡️</div>
-                <p>No mash schedule defined</p>
-                <p className="text-sm">
-                  Add fermentables to see mash calculations
-                </p>
-              </div>
+              <Empty className="border-0">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Thermometer />
+                  </EmptyMedia>
+                  <EmptyTitle>No mash schedule defined</EmptyTitle>
+                  <EmptyDescription>
+                    Add fermentables to see mash calculations
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             </CardContent>
           </Card>
 
@@ -173,28 +188,25 @@ export default function NewRecipePage() {
             <CardHeader>
               <CardTitle>Yeast</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <Select defaultValue="">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select yeast strain" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="us-05">US-05 (Safale)</SelectItem>
-                      <SelectItem value="s-04">S-04 (Safale)</SelectItem>
-                      <SelectItem value="wlp001">
-                        WLP001 (White Labs)
-                      </SelectItem>
-                      <SelectItem value="kveik">Kveik (Lallemand)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="pitchAmount">Pitch Amount (g)</Label>
-                  <Input id="pitchAmount" type="number" placeholder="11" />
-                </div>
-              </div>
+            <CardContent className="space-y-4">
+              <Field>
+                <FieldLabel>Yeast Strain</FieldLabel>
+                <Select defaultValue="">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select yeast strain" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="us-05">US-05 (Safale)</SelectItem>
+                    <SelectItem value="s-04">S-04 (Safale)</SelectItem>
+                    <SelectItem value="wlp001">WLP001 (White Labs)</SelectItem>
+                    <SelectItem value="kveik">Kveik (Lallemand)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="pitchAmount">Pitch Amount (g)</FieldLabel>
+                <Input id="pitchAmount" type="number" placeholder="11" />
+              </Field>
             </CardContent>
           </Card>
 
@@ -203,25 +215,17 @@ export default function NewRecipePage() {
             <CardHeader>
               <CardTitle>Priming</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="fermentationTemp">
-                    Fermentation Temp (°C)
-                  </Label>
-                  <Input
-                    id="fermentationTemp"
-                    type="number"
-                    defaultValue={20}
-                  />
-                </div>
-                <div className="p-3 bg-muted rounded-lg">
-                  <div className="text-sm space-y-1">
-                    <div>Priming Sugar: {stats.primingSugar.amountG}g</div>
-                    <div>
-                      Target CO₂: {stats.primingSugar.co2Volumes} volumes
-                    </div>
-                  </div>
+            <CardContent className="space-y-4">
+              <Field>
+                <FieldLabel htmlFor="fermentationTemp">
+                  Fermentation Temp (°C)
+                </FieldLabel>
+                <Input id="fermentationTemp" type="number" defaultValue={20} />
+              </Field>
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="text-sm space-y-1">
+                  <div>Priming Sugar: {stats.primingSugar.amountG}g</div>
+                  <div>Target CO₂: {stats.primingSugar.co2Volumes} volumes</div>
                 </div>
               </div>
             </CardContent>
@@ -241,13 +245,17 @@ export default function NewRecipePage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <div className="text-4xl mb-2">🍺</div>
-                <p>No hops added yet</p>
-                <p className="text-sm">
-                  Add hop additions for bitterness, flavor, and aroma
-                </p>
-              </div>
+              <Empty className="border-0">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Beer />
+                  </EmptyMedia>
+                  <EmptyTitle>No hops added yet</EmptyTitle>
+                  <EmptyDescription>
+                    Add hop additions for bitterness, flavor, and aroma
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             </CardContent>
           </Card>
 

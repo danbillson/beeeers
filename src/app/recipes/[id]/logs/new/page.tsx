@@ -6,7 +6,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Save, ArrowLeft } from "lucide-react";
@@ -63,8 +63,8 @@ export default function NewBrewLogPage({ params }: { params: { id: string } }) {
               <CardTitle>Brew Session</CardTitle>
             </CardHeader>
             <CardContent>
-              <div>
-                <Label htmlFor="brewDate">Brew Date</Label>
+              <Field>
+                <FieldLabel htmlFor="brewDate">Brew Date</FieldLabel>
                 <Input
                   id="brewDate"
                   name="brewDate"
@@ -72,7 +72,7 @@ export default function NewBrewLogPage({ params }: { params: { id: string } }) {
                   defaultValue={new Date().toISOString().split("T")[0]}
                   required
                 />
-              </div>
+              </Field>
             </CardContent>
           </Card>
 
@@ -83,8 +83,8 @@ export default function NewBrewLogPage({ params }: { params: { id: string } }) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="measuredOG">Measured OG</Label>
+                <Field>
+                  <FieldLabel htmlFor="measuredOG">Measured OG</FieldLabel>
                   <Input
                     id="measuredOG"
                     name="measuredOG"
@@ -92,9 +92,9 @@ export default function NewBrewLogPage({ params }: { params: { id: string } }) {
                     step="0.001"
                     placeholder="1.060"
                   />
-                </div>
-                <div>
-                  <Label htmlFor="measuredFG">Measured FG</Label>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="measuredFG">Measured FG</FieldLabel>
                   <Input
                     id="measuredFG"
                     name="measuredFG"
@@ -102,7 +102,7 @@ export default function NewBrewLogPage({ params }: { params: { id: string } }) {
                     step="0.001"
                     placeholder="1.012"
                   />
-                </div>
+                </Field>
               </div>
             </CardContent>
           </Card>
@@ -113,17 +113,17 @@ export default function NewBrewLogPage({ params }: { params: { id: string } }) {
               <CardTitle>Fermentation</CardTitle>
             </CardHeader>
             <CardContent>
-              <div>
-                <Label htmlFor="fermentationTemp">
+              <Field>
+                <FieldLabel htmlFor="fermentationTemp">
                   Fermentation Temperature (°C)
-                </Label>
+                </FieldLabel>
                 <Input
                   id="fermentationTemp"
                   name="fermentationTempC"
                   type="number"
                   placeholder="20"
                 />
-              </div>
+              </Field>
             </CardContent>
           </Card>
 
@@ -137,12 +137,12 @@ export default function NewBrewLogPage({ params }: { params: { id: string } }) {
                 {issueOptions.map((issue) => (
                   <div key={issue} className="flex items-center space-x-2">
                     <Checkbox id={issue} name="issues" value={issue} />
-                    <Label
+                    <FieldLabel
                       htmlFor={issue}
                       className="text-sm font-normal capitalize"
                     >
                       {issue.replace("-", " ")}
-                    </Label>
+                    </FieldLabel>
                   </div>
                 ))}
               </div>
@@ -194,4 +194,3 @@ export default function NewBrewLogPage({ params }: { params: { id: string } }) {
     </div>
   );
 }
-

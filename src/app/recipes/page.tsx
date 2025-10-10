@@ -4,6 +4,7 @@
  */
 
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
   Card,
   CardContent,
@@ -12,7 +13,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Copy, Calendar } from "lucide-react";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+} from "@/components/ui/empty";
+import { Plus, Edit, Copy, Calendar, Beer } from "lucide-react";
 import Link from "next/link";
 
 // Mock data for now - will be replaced with real data fetching
@@ -54,7 +63,7 @@ export default function RecipesPage() {
         </div>
         <Link href="/recipes/new">
           <Button>
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus />
             New Recipe
           </Button>
         </Link>
@@ -104,17 +113,17 @@ export default function RecipesPage() {
               )}
 
               {/* Actions */}
-              <div className="flex gap-2">
-                <Link href={`/recipes/${recipe.id}`} className="flex-1">
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Edit className="w-4 h-4 mr-2" />
+              <ButtonGroup className="w-full">
+                <Button variant="outline" size="sm" className="w-full" asChild>
+                  <Link href={`/recipes/${recipe.id}`} className="flex-1">
+                    <Edit />
                     Edit
-                  </Button>
-                </Link>
-                <Button variant="outline" size="sm">
-                  <Copy className="w-4 h-4" />
+                  </Link>
                 </Button>
-              </div>
+                <Button variant="outline" size="sm">
+                  <Copy />
+                </Button>
+              </ButtonGroup>
             </CardContent>
           </Card>
         ))}
@@ -122,25 +131,25 @@ export default function RecipesPage() {
 
       {/* Empty State */}
       {mockRecipes.length === 0 && (
-        <Card className="text-center py-12">
-          <CardContent>
-            <div className="space-y-4">
-              <div className="text-6xl">🍺</div>
-              <div>
-                <h3 className="text-lg font-semibold">No recipes yet</h3>
-                <p className="text-muted-foreground">
-                  Create your first brewing recipe to get started
-                </p>
-              </div>
-              <Link href="/recipes/new">
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Recipe
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Beer />
+            </EmptyMedia>
+            <EmptyTitle>No recipes yet</EmptyTitle>
+            <EmptyDescription>
+              Create your first brewing recipe to get started
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Link href="/recipes/new">
+              <Button>
+                <Plus />
+                Create Recipe
+              </Button>
+            </Link>
+          </EmptyContent>
+        </Empty>
       )}
     </div>
   );
