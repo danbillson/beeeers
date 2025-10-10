@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Beeeers 🍺
+
+A modern brewing companion web app for creating, managing, and refining beer recipes with accurate brewing calculations and detailed brew session logging.
+
+## Features
+
+- **Recipe Management**: Create and edit beer recipes with automatic calculations
+- **Brewing Calculations**: Accurate OG, FG, ABV, IBU, and SRM calculations using industry-standard formulas
+- **Brew Logs**: Track brewing sessions with gravity readings, fermentation notes, and outcomes
+- **Water Chemistry**: Calculate ion profiles and salt additions for optimal water treatment
+- **Clean UI**: Modern, Attio-inspired interface built with shadcn/ui and Tailwind CSS
+
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Database**: PostgreSQL with Drizzle ORM
+- **Authentication**: Better Auth
+- **UI**: shadcn/ui + Tailwind CSS
+- **Language**: TypeScript
+- **Package Manager**: pnpm
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+ 
+- PostgreSQL database
+- pnpm
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd beeeers
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+pnpm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Set up environment variables:
+```bash
+cp .env.local.example .env.local
+# Edit .env.local with your database credentials
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Set up the database:
+```bash
+# Generate migrations
+pnpm drizzle-kit generate
 
-## Learn More
+# Apply migrations
+pnpm drizzle-kit push
 
-To learn more about Next.js, take a look at the following resources:
+# Seed ingredients
+pnpm tsx src/db/seed.ts
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. Start the development server:
+```bash
+pnpm dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-## Deploy on Vercel
+## Brewing Calculations
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The app implements industry-standard brewing calculations:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Gravity**: Palmer's mass-gravity-volume formula with PKL (Points per kg per L)
+- **IBU**: Tinseth formula with whirlpool and utilization adjustments
+- **Color**: SRM calculation using Morey equation
+- **ABV**: Standard alcohol calculation
+- **Priming**: CO₂ volume calculations for carbonation
+- **Water**: Ion profile estimation for water chemistry
+
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js app router pages
+│   ├── recipes/           # Recipe management pages
+│   ├── logs/              # Brew log pages
+│   └── api/               # API routes
+├── components/            # React components
+│   ├── ui/               # shadcn/ui components
+│   └── RecipeStatsBar.tsx # Custom components
+├── db/                   # Database schema and connection
+├── lib/                  # Utilities and calculations
+│   ├── calc/             # Brewing calculation functions
+│   └── validations.ts    # Zod schemas
+└── hooks/                # Custom React hooks
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details.
