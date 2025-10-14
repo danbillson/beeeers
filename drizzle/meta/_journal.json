@@ -8,6 +8,13 @@
       "when": 1747252636954,
       "tag": "0000_easy_the_watchers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1760118811354,
+      "tag": "0001_tricky_the_renegades",
+      "breakpoints": true
     }
   ]
 }
