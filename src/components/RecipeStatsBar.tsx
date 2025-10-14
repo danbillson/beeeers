@@ -22,9 +22,9 @@ interface RecipeStatsBarProps {
 export function RecipeStatsBar({ stats, className }: RecipeStatsBarProps) {
   return (
     <Card
-      className={`sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${className}`}
+      className={`sticky py-2 top-2 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${className}`}
     >
-      <div className="flex items-center gap-4 p-4">
+      <div className="flex items-center gap-4 px-4">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-muted-foreground">
             Stats:
