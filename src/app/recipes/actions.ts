@@ -108,7 +108,7 @@ export async function deleteRecipe(recipeId: string) {
   }
 }
 
-export async function duplicateRecipe(recipeId: string) {
+export async function duplicateRecipe() {
   try {
     // TODO: Implement recipe duplication
     // This would involve:

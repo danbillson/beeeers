@@ -30,7 +30,7 @@ const issueOptions = [
   "over-carbonated",
 ];
 
-export default function NewBrewLogPage({ params }: { params: { id: string } }) {
+export default function NewBrewLogPage() {
   const recipe = mockRecipe;
 
   return (

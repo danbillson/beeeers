@@ -6,7 +6,6 @@
 import { RecipeStatsBar } from "@/components/RecipeStatsBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -17,7 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Save, Plus, Trash2 } from "lucide-react";
 import { useRecipeCalculations } from "@/hooks/use-recipe-calculations";
 
@@ -71,11 +69,7 @@ const mockRecipe = {
   fermentationTempC: 20,
 };
 
-export default function RecipeEditorPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function RecipeEditorPage() {
   // Calculate stats using the hook
   const stats = useRecipeCalculations(mockRecipe);
 

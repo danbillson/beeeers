@@ -3,7 +3,6 @@ import {
   pgTable,
   text,
   timestamp,
-  decimal,
   integer,
   real,
   pgEnum,

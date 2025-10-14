@@ -41,7 +41,7 @@ const issueOptions = [
   "over-carbonated",
 ];
 
-export default function BrewLogPage({ params }: { params: { id: string } }) {
+export default function BrewLogPage() {
   const brewLog = mockBrewLog;
 
   return (

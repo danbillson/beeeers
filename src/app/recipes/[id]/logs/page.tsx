@@ -61,7 +61,7 @@ const mockRecipe = {
   name: "NEIPA 10L Batch",
 };
 
-export default function RecipeLogsPage({ params }: { params: { id: string } }) {
+export default function RecipeLogsPage() {
   const recipe = mockRecipe;
   const brewLogs = mockBrewLogs;
 

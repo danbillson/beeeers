@@ -137,7 +137,7 @@ export function useRecipeCalculations(
     const saltAdditions: SaltAddition[] = data.waterAdditions.map((wa) => ({
       name: wa.name,
       amountG: wa.amountG,
-      ionType: wa.ionType as any,
+      ionType: wa.ionType as "ca" | "mg" | "na" | "cl" | "so4" | "hco3",
     }));
     const ionProfile = calculateWaterProfile(baseProfile, saltAdditions);
 
@@ -172,7 +172,6 @@ export function useRecipeCalculations(
     data.batchSizeL,
     data.boilSizeL,
     data.efficiency,
-    data.boilTimeMin,
     data.hopUtilizationMultiplier,
     data.baseWaterProfile,
     data.fermentationTempC,
