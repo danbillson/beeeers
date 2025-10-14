@@ -7,7 +7,7 @@ import { db } from "./index";
 import { ingredients } from "./schema";
 import { nanoid } from "nanoid";
 
-const seedIngredients = [
+const ingredientSeedData = [
   // Fermentables
   {
     kind: "fermentable" as const,
@@ -211,7 +211,7 @@ async function seedIngredients() {
 
   try {
     // Insert all ingredients
-    const ingredientData = seedIngredients.map((ingredient) => ({
+    const ingredientData = ingredientSeedData.map((ingredient) => ({
       id: nanoid(),
       ...ingredient,
       createdAt: new Date(),
