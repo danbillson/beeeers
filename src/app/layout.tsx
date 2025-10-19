@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { AppHeader } from "@/components/AppHeader";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -26,9 +27,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${dmSans.variable} ${geistMono.variable} font-sans antialiased relative h-screen theme-scaled`}
+        className={`${dmSans.variable} ${geistMono.variable} font-sans antialiased relative min-h-screen theme-scaled`}
       >
-        {children}
+        <div className="flex min-h-screen flex-col">
+          <AppHeader />
+          <main className="flex-1">{children}</main>
+        </div>
       </body>
     </html>
   );
