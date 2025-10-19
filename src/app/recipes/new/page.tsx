@@ -7,15 +7,15 @@
 
 import { nanoid } from "nanoid";
 import {
-  Loader2,
   Save,
   Wheat,
   Beer,
   Thermometer,
   Plus,
   Trash2,
+  Loader2,
 } from "lucide-react";
-import { useTransition } from "react";
+import { useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RecipeStatsBar } from "@/components/recipe-stats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,10 +57,9 @@ import {
   calculateClToSO4Ratio,
   getWaterProfileDescription,
 } from "@/lib/calc/water";
-import {
-  type CreateRecipeActionInput,
-  createRecipe,
-} from "@/app/recipes/actions";
+import { createRecipe } from "@/app/recipes/actions";
+import { CreateRecipeActionInput } from "@/app/recipes/actions.shared";
+import { useSession } from "@/lib/auth-client";
 import { toast } from "sonner";
 
 type FermentableOption = {
@@ -352,15 +351,30 @@ export default function NewRecipePage() {
 
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { data: sessionData, isPending: isSessionPending } = useSession();
+
+  useEffect(() => {
+    if (!isSessionPending && !sessionData) {
+      router.replace("/login");
+    }
+  }, [isSessionPending, sessionData, router]);
 
   function handleSave() {
+    const userId = sessionData?.user?.id;
+
     if (!formState.name.trim()) {
       toast.error("Recipe name is required");
       return;
     }
 
+    if (!userId) {
+      toast.error("You must be signed in to create a recipe");
+      router.replace("/login");
+      return;
+    }
+
     const payload: CreateRecipeActionInput = {
-      userId: "user-1",
+      userId,
       name: formState.name.trim(),
       style: formState.style.trim() || null,
       method: formState.method,
@@ -467,6 +481,18 @@ export default function NewRecipePage() {
       ? "∞"
       : chlorideToSulfateRatioValue.toFixed(2);
   const waterProfileCharacter = getWaterProfileDescription(stats.ionProfile);
+
+  if (isSessionPending) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!sessionData) {
+    return null;
+  }
 
   function handleAddMashStep() {
     addMashStep();
@@ -701,7 +727,7 @@ export default function NewRecipePage() {
           <h1 className="text-3xl font-bold">New Recipe</h1>
           <p className="text-muted-foreground">Create a new brewing recipe</p>
         </div>
-        <Button onClick={handleSave} disabled={isPending}>
+        <Button onClick={handleSave} disabled={isPending || isSessionPending}>
           {isPending ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
