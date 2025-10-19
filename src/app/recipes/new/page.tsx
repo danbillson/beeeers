@@ -6,7 +6,17 @@
  */
 
 import { nanoid } from "nanoid";
-import { Save, Wheat, Beer, Thermometer, Plus, Trash2 } from "lucide-react";
+import {
+  Loader2,
+  Save,
+  Wheat,
+  Beer,
+  Thermometer,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { RecipeStatsBar } from "@/components/RecipeStatsBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,14 +37,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useRecipeCalculations } from "@/hooks/use-recipe-calculations";
-import {
-  SALT_COMPOSITIONS,
-  type IonProfile,
-  type SaltAddition,
-  calculateClToSO4Ratio,
-  getWaterProfileDescription,
-} from "@/lib/calc/water";
 import {
   InputGroup,
   InputGroupAddon,
@@ -47,6 +49,19 @@ import {
   type MashStepEntry,
   type RecipeMethod,
 } from "@/hooks/use-new-recipe-store";
+import { useRecipeCalculations } from "@/hooks/use-recipe-calculations";
+import {
+  SALT_COMPOSITIONS,
+  type IonProfile,
+  type SaltAddition,
+  calculateClToSO4Ratio,
+  getWaterProfileDescription,
+} from "@/lib/calc/water";
+import {
+  type CreateRecipeActionInput,
+  createRecipe,
+} from "@/app/recipes/actions";
+import { toast } from "sonner";
 
 type FermentableOption = {
   id: string;
@@ -333,6 +348,71 @@ export default function NewRecipePage() {
   const mashSteps = useNewRecipeStore((state) => state.mashSteps);
   const setMashSteps = useNewRecipeStore((state) => state.setMashSteps);
   const addMashStep = useNewRecipeStore((state) => state.addMashStep);
+  const resetForm = useNewRecipeStore((state) => state.reset);
+
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  function handleSave() {
+    if (!formState.name.trim()) {
+      toast.error("Recipe name is required");
+      return;
+    }
+
+    const payload: CreateRecipeActionInput = {
+      userId: "user-1",
+      name: formState.name.trim(),
+      style: formState.style.trim() || null,
+      method: formState.method,
+      batchSizeL: formState.batchSizeL,
+      boilSizeL: formState.boilSizeL,
+      efficiency: formState.efficiency,
+      boilTimeMin: formState.boilTimeMin,
+      hopUtilizationMultiplier: formState.hopUtilizationMultiplier,
+      notes: formState.notes.trim() || null,
+      fermentables: fermentables.map((item) => ({
+        ingredientName: item.name,
+        amountKg: item.amountKg,
+      })),
+      hops: hops.map((item) => ({
+        ingredientName: item.name,
+        amountG: item.amountG,
+        timeMin: item.timeMin,
+        type: item.type,
+      })),
+      yeast: undefined,
+      waterAdditions: waterAdditions.map((item) => ({
+        name: item.name,
+        amountG: item.amountG,
+      })),
+      mashSteps: mashSteps.map((item) => ({
+        stepType: item.stepType,
+        temperatureC: item.temperatureC,
+        timeMin: item.timeMin,
+      })),
+    };
+
+    startTransition(async () => {
+      const result = await createRecipe(payload);
+
+      if (!result.ok) {
+        if (result.fieldErrors) {
+          const messages = Object.values(result.fieldErrors).flat();
+          if (messages.length > 0) {
+            toast.error(messages[0] ?? "Failed to save recipe");
+            return;
+          }
+        }
+
+        toast.error(result.message ?? "Failed to save recipe");
+        return;
+      }
+
+      resetForm();
+      toast.success("Recipe saved successfully");
+      router.push(`/recipes/${result.recipeId}`);
+    });
+  }
 
   const selectedWaterProfile =
     WATER_PROFILE_OPTIONS.find((option) => option.id === waterProfileId) ??
@@ -621,9 +701,13 @@ export default function NewRecipePage() {
           <h1 className="text-3xl font-bold">New Recipe</h1>
           <p className="text-muted-foreground">Create a new brewing recipe</p>
         </div>
-        <Button>
-          <Save />
-          Save Recipe
+        <Button onClick={handleSave} disabled={isPending}>
+          {isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
+          {isPending ? "Saving..." : "Save Recipe"}
         </Button>
       </div>
 

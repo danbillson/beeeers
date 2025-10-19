@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppHeader } from "@/components/AppHeader";
+import { Toaster } from "@/components/ui/sonner";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({
           <AppHeader />
           <main className="flex-1">{children}</main>
         </div>
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );

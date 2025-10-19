@@ -51,7 +51,7 @@ export type WaterAdditionEntry = {
 
 export type MashStepEntry = {
   id: string;
-  stepType: "strike" | "sparge";
+  stepType: "strike" | "sparge" | "mashout";
   temperatureC: number;
   timeMin: number;
 };
