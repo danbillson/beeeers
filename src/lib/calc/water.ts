@@ -22,7 +22,7 @@ export interface SaltAddition {
  * Calculate ion contribution from salt additions
  * Common brewing salts and their ion contributions
  */
-const SALT_COMPOSITIONS: Record<string, Partial<IonProfile>> = {
+export const SALT_COMPOSITIONS: Record<string, Partial<IonProfile>> = {
   "Gypsum (CaSO4)": { ca: 147, so4: 349 }, // per 100g
   "Calcium Chloride (CaCl2)": { ca: 136, cl: 240 },
   "Epsom Salt (MgSO4)": { mg: 99, so4: 389 },

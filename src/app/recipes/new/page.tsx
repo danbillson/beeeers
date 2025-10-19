@@ -1,8 +1,14 @@
+"use client";
+
 /**
  * New Recipe Page
  * Create a new brewing recipe
  */
 
+import { useState } from "react";
+import Link from "next/link";
+import { nanoid } from "nanoid";
+import { Save, ArrowLeft, Wheat, Beer, Thermometer, Plus, Trash2 } from "lucide-react";
 import { RecipeStatsBar } from "@/components/RecipeStatsBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,10 +29,304 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, ArrowLeft, Wheat, Beer, Thermometer } from "lucide-react";
-import Link from "next/link";
 import { useRecipeCalculations } from "@/hooks/use-recipe-calculations";
+import {
+  SALT_COMPOSITIONS,
+  type IonProfile,
+  type SaltAddition,
+  calculateClToSO4Ratio,
+  getWaterProfileDescription,
+} from "@/lib/calc/water";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "@/components/ui/input-group";
 
+type RecipeMethod = "all-grain" | "extract" | "partial";
+
+type FermentableOption = {
+  id: string;
+  name: string;
+  origin: string;
+  ppg: number;
+  colorLovibond: number;
+  description: string;
+};
+
+type HopOption = {
+  id: string;
+  name: string;
+  origin: string;
+  alphaAcid: number;
+  description: string;
+};
+
+type FermentableEntry = {
+  id: string;
+  optionId: string;
+  name: string;
+  origin: string;
+  amountKg: number;
+  ppg: number;
+  colorLovibond: number;
+};
+
+type HopEntry = {
+  id: string;
+  optionId: string;
+  name: string;
+  origin: string;
+  amountG: number;
+  timeMin: number;
+  type: "boil" | "whirlpool" | "dry-hop";
+  alphaAcid: number;
+};
+
+type RecipeFormState = {
+  name: string;
+  style: string;
+  method: RecipeMethod;
+  batchSizeL: number;
+  boilSizeL: number;
+  efficiency: number;
+  boilTimeMin: number;
+  hopUtilizationMultiplier: number;
+  fermentationTempC: number;
+  notes: string;
+};
+
+type WaterProfileOption = {
+  id: string;
+  name: string;
+  description: string;
+  profile: IonProfile;
+};
+
+type SaltOption = {
+  id: string;
+  name: string;
+  description: string;
+};
+
+type WaterAdditionEntry = {
+  id: string;
+  optionId: string;
+  name: string;
+  amountG: number;
+};
+
+const FERMENTABLE_OPTIONS: FermentableOption[] = [
+  {
+    id: "pale-2-row",
+    name: "Pale 2-Row",
+    origin: "US",
+    ppg: 3.0,
+    colorLovibond: 2,
+    description: "Base malt for most beer styles",
+  },
+  {
+    id: "pilsner",
+    name: "Pilsner",
+    origin: "Germany",
+    ppg: 3.1,
+    colorLovibond: 1.5,
+    description: "Light base malt for lagers and pilsners",
+  },
+  {
+    id: "munich",
+    name: "Munich",
+    origin: "Germany",
+    ppg: 2.9,
+    colorLovibond: 9,
+    description: "Malt with rich, toasty flavor",
+  },
+  {
+    id: "crystal-60",
+    name: "Crystal 60",
+    origin: "UK",
+    ppg: 2.7,
+    colorLovibond: 60,
+    description: "Caramel malt for sweetness and color",
+  },
+  {
+    id: "wheat-malt",
+    name: "Wheat Malt",
+    origin: "Germany",
+    ppg: 3.0,
+    colorLovibond: 2,
+    description: "Wheat malt for head retention and body",
+  },
+  {
+    id: "vienna",
+    name: "Vienna",
+    origin: "Austria",
+    ppg: 3.0,
+    colorLovibond: 4,
+    description: "Light amber malt with toasty notes",
+  },
+  {
+    id: "carapils",
+    name: "CaraPils",
+    origin: "Germany",
+    ppg: 2.8,
+    colorLovibond: 2,
+    description: "Dextrin malt for body and head retention",
+  },
+  {
+    id: "chocolate",
+    name: "Chocolate",
+    origin: "UK",
+    ppg: 2.4,
+    colorLovibond: 350,
+    description: "Dark roasted malt for chocolate flavor",
+  },
+  {
+    id: "roasted-barley",
+    name: "Roasted Barley",
+    origin: "UK",
+    ppg: 2.3,
+    colorLovibond: 500,
+    description: "Very dark malt for stout character",
+  },
+  {
+    id: "flaked-oats",
+    name: "Oats (Flaked)",
+    origin: "US",
+    ppg: 2.8,
+    colorLovibond: 1,
+    description: "Unmalted oats for smooth mouthfeel",
+  },
+];
+
+const HOP_OPTIONS: HopOption[] = [
+  {
+    id: "citra",
+    name: "Citra",
+    origin: "US",
+    alphaAcid: 12,
+    description: "Tropical fruit, citrus, and passionfruit",
+  },
+  {
+    id: "mosaic",
+    name: "Mosaic",
+    origin: "US",
+    alphaAcid: 12,
+    description: "Blueberry, tropical fruit, and citrus",
+  },
+  {
+    id: "cascade",
+    name: "Cascade",
+    origin: "US",
+    alphaAcid: 6,
+    description: "Floral, spicy, and citrusy",
+  },
+  {
+    id: "simcoe",
+    name: "Simcoe",
+    origin: "US",
+    alphaAcid: 13,
+    description: "Pine, earth, and citrus",
+  },
+  {
+    id: "magnum",
+    name: "Magnum",
+    origin: "Germany",
+    alphaAcid: 14,
+    description: "Clean bittering hop with minimal aroma",
+  },
+  {
+    id: "amarillo",
+    name: "Amarillo",
+    origin: "US",
+    alphaAcid: 9,
+    description: "Orange, grapefruit, and floral",
+  },
+  {
+    id: "centennial",
+    name: "Centennial",
+    origin: "US",
+    alphaAcid: 10,
+    description: "Citrus and floral, similar to Cascade",
+  },
+  {
+    id: "saaz",
+    name: "Saaz",
+    origin: "Czech Republic",
+    alphaAcid: 4,
+    description: "Classic noble hop, spicy and herbal",
+  },
+  {
+    id: "hallertau",
+    name: "Hallertau",
+    origin: "Germany",
+    alphaAcid: 5,
+    description: "Noble hop with floral and spicy notes",
+  },
+];
+
+const WATER_PROFILE_OPTIONS: WaterProfileOption[] = [
+  {
+    id: "reverse-osmosis",
+    name: "Reverse Osmosis",
+    description: "Neutral starting point with minimal minerals",
+    profile: { ca: 0, mg: 0, na: 0, cl: 0, so4: 0, hco3: 0 },
+  },
+  {
+    id: "pilsen",
+    name: "Pilsen Lager",
+    description: "Soft water ideal for delicate lagers",
+    profile: { ca: 7, mg: 3, na: 2, cl: 5, so4: 5, hco3: 15 },
+  },
+  {
+    id: "dortmund",
+    name: "Dortmund Export",
+    description: "Balanced European profile with elevated minerals",
+    profile: { ca: 60, mg: 12, na: 40, cl: 60, so4: 120, hco3: 180 },
+  },
+  {
+    id: "burton",
+    name: "Burton-on-Trent",
+    description: "High sulfate profile for assertive pale ales",
+    profile: { ca: 275, mg: 40, na: 25, cl: 35, so4: 450, hco3: 300 },
+  },
+];
+
+const DEFAULT_WATER_PROFILE_ID = WATER_PROFILE_OPTIONS[0].id;
+
+const SALT_OPTIONS: SaltOption[] = [
+  {
+    id: "Gypsum (CaSO4)",
+    name: "Gypsum (CaSO4)",
+    description: "Adds calcium and sulfate for crisper bitterness",
+  },
+  {
+    id: "Calcium Chloride (CaCl2)",
+    name: "Calcium Chloride (CaCl2)",
+    description: "Boosts calcium and chloride for malt roundness",
+  },
+  {
+    id: "Epsom Salt (MgSO4)",
+    name: "Epsom Salt (MgSO4)",
+    description: "Raises magnesium and sulfate for hop expression",
+  },
+  {
+    id: "Table Salt (NaCl)",
+    name: "Table Salt (NaCl)",
+    description: "Adds sodium and chloride for body",
+  },
+  {
+    id: "Chalk (CaCO3)",
+    name: "Chalk (CaCO3)",
+    description: "Increases calcium and bicarbonate for dark beers",
+  },
+  {
+    id: "Baking Soda (NaHCO3)",
+    name: "Baking Soda (NaHCO3)",
+    description: "Raises sodium and bicarbonate to balance acidity",
+  },
+];
 // Empty recipe template
 const emptyRecipe = {
   id: "new",
@@ -55,8 +355,248 @@ const emptyRecipe = {
 };
 
 export default function NewRecipePage() {
-  // Calculate stats using the hook
-  const stats = useRecipeCalculations(emptyRecipe);
+  const [formState, setFormState] = useState<RecipeFormState>({
+    name: "",
+    style: "",
+    method: "all-grain",
+    batchSizeL: 10,
+    boilSizeL: 12,
+    efficiency: 75,
+    boilTimeMin: 60,
+    hopUtilizationMultiplier: 1.0,
+    fermentationTempC: 20,
+    notes: "",
+  });
+  const [fermentables, setFermentables] = useState<FermentableEntry[]>([]);
+  const [hops, setHops] = useState<HopEntry[]>([]);
+  const [waterProfileId, setWaterProfileId] = useState(DEFAULT_WATER_PROFILE_ID);
+  const [waterAdditions, setWaterAdditions] = useState<WaterAdditionEntry[]>([]);
+
+  const selectedWaterProfile =
+    WATER_PROFILE_OPTIONS.find((option) => option.id === waterProfileId) ??
+    WATER_PROFILE_OPTIONS[0];
+  const baseWaterProfile = selectedWaterProfile.profile;
+  const waterAdditionsForCalc: SaltAddition[] = waterAdditions.flatMap((addition) => {
+    const salt = SALT_COMPOSITIONS[addition.name];
+    if (!salt || addition.amountG <= 0) {
+      return [];
+    }
+
+    return Object.keys(salt).map((ion) => ({
+      name: addition.name,
+      amountG: addition.amountG,
+      ionType: ion as SaltAddition["ionType"],
+    }));
+  });
+
+  const stats = useRecipeCalculations({
+    fermentables: fermentables.map((fermentable) => ({
+      ingredient: {
+        ppg: fermentable.ppg,
+        colorLovibond: fermentable.colorLovibond,
+      },
+      amountKg: fermentable.amountKg,
+    })),
+    hops: hops.map((hop) => ({
+      ingredient: { alphaAcid: hop.alphaAcid },
+      amountG: hop.amountG,
+      timeMin: hop.timeMin,
+      type: hop.type,
+    })),
+    yeast: emptyRecipe.yeast,
+    waterAdditions: waterAdditionsForCalc,
+    batchSizeL: formState.batchSizeL,
+    boilSizeL: formState.boilSizeL,
+    efficiency: formState.efficiency,
+    boilTimeMin: formState.boilTimeMin,
+    hopUtilizationMultiplier: formState.hopUtilizationMultiplier,
+    baseWaterProfile,
+    fermentationTempC: formState.fermentationTempC,
+  });
+  const chlorideToSulfateRatioValue = calculateClToSO4Ratio(stats.ionProfile);
+  const chlorideToSulfateRatio =
+    chlorideToSulfateRatioValue === Infinity
+      ? "∞"
+      : chlorideToSulfateRatioValue.toFixed(2);
+  const waterProfileCharacter = getWaterProfileDescription(stats.ionProfile);
+
+  function handleAddFermentable() {
+    const option = FERMENTABLE_OPTIONS[0];
+    if (!option) {
+      return;
+    }
+
+    setFermentables((previous) => [
+      ...previous,
+      {
+        id: nanoid(),
+        optionId: option.id,
+        name: option.name,
+        origin: option.origin,
+        amountKg: 1,
+        ppg: option.ppg,
+        colorLovibond: option.colorLovibond,
+      },
+    ]);
+  }
+
+  function handleFermentableSelection(id: string, optionId: string) {
+    const option = FERMENTABLE_OPTIONS.find((item) => item.id === optionId);
+    if (!option) {
+      return;
+    }
+
+    setFermentables((previous) =>
+      previous.map((fermentable) =>
+        fermentable.id === id
+          ? {
+              ...fermentable,
+              optionId,
+              name: option.name,
+              origin: option.origin,
+              ppg: option.ppg,
+              colorLovibond: option.colorLovibond,
+            }
+          : fermentable
+      )
+    );
+  }
+
+  function handleFermentableAmount(id: string, amount: number) {
+    setFermentables((previous) =>
+      previous.map((fermentable) =>
+        fermentable.id === id
+          ? { ...fermentable, amountKg: amount < 0 ? 0 : amount }
+          : fermentable
+      )
+    );
+  }
+
+  function handleRemoveFermentable(id: string) {
+    setFermentables((previous) => previous.filter((item) => item.id !== id));
+  }
+
+  function handleAddHop() {
+    const option = HOP_OPTIONS[0];
+    if (!option) {
+      return;
+    }
+
+    setHops((previous) => [
+      ...previous,
+      {
+        id: nanoid(),
+        optionId: option.id,
+        name: option.name,
+        origin: option.origin,
+        amountG: 25,
+        timeMin: 60,
+        type: "boil",
+        alphaAcid: option.alphaAcid,
+      },
+    ]);
+  }
+
+  function handleHopSelection(id: string, optionId: string) {
+    const option = HOP_OPTIONS.find((item) => item.id === optionId);
+    if (!option) {
+      return;
+    }
+
+    setHops((previous) =>
+      previous.map((hop) =>
+        hop.id === id
+          ? {
+              ...hop,
+              optionId,
+              name: option.name,
+              origin: option.origin,
+              alphaAcid: option.alphaAcid,
+            }
+          : hop
+      )
+    );
+  }
+
+  function handleHopAmount(id: string, amount: number) {
+    setHops((previous) =>
+      previous.map((hop) =>
+        hop.id === id ? { ...hop, amountG: amount < 0 ? 0 : amount } : hop
+      )
+    );
+  }
+
+  function handleHopTime(id: string, time: number) {
+    setHops((previous) =>
+      previous.map((hop) =>
+        hop.id === id ? { ...hop, timeMin: time < 0 ? 0 : time } : hop
+      )
+    );
+  }
+
+  function handleHopType(id: string, type: HopEntry["type"]) {
+    setHops((previous) =>
+      previous.map((hop) => (hop.id === id ? { ...hop, type } : hop))
+    );
+  }
+
+  function handleRemoveHop(id: string) {
+    setHops((previous) => previous.filter((item) => item.id !== id));
+  }
+
+  function handleWaterProfileChange(id: string) {
+    setWaterProfileId(id);
+  }
+
+  function handleAddWaterAddition() {
+    const option = SALT_OPTIONS[0];
+    if (!option) {
+      return;
+    }
+
+    setWaterAdditions((previous) => [
+      ...previous,
+      {
+        id: nanoid(),
+        optionId: option.id,
+        name: option.name,
+        amountG: 1,
+      },
+    ]);
+  }
+
+  function handleWaterAdditionSelection(id: string, optionId: string) {
+    const option = SALT_OPTIONS.find((item) => item.id === optionId);
+    if (!option) {
+      return;
+    }
+
+    setWaterAdditions((previous) =>
+      previous.map((addition) =>
+        addition.id === id
+          ? {
+              ...addition,
+              optionId,
+              name: option.name,
+            }
+          : addition
+      )
+    );
+  }
+
+  function handleWaterAdditionAmount(id: string, amount: number) {
+    setWaterAdditions((previous) =>
+      previous.map((addition) =>
+        addition.id === id
+          ? { ...addition, amountG: amount < 0 ? 0 : amount }
+          : addition
+      )
+    );
+  }
+
+  function handleRemoveWaterAddition(id: string) {
+    setWaterAdditions((previous) => previous.filter((item) => item.id !== id));
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -95,15 +635,43 @@ export default function NewRecipePage() {
             <CardContent className="space-y-4">
               <Field>
                 <FieldLabel htmlFor="name">Recipe Name</FieldLabel>
-                <Input id="name" placeholder="e.g., NEIPA 10L Batch" />
+                <Input
+                  id="name"
+                  placeholder="e.g., NEIPA 10L Batch"
+                  value={formState.name}
+                  onChange={(event) =>
+                    setFormState((previous) => ({
+                      ...previous,
+                      name: event.target.value,
+                    }))
+                  }
+                />
               </Field>
               <Field>
                 <FieldLabel htmlFor="style">Style</FieldLabel>
-                <Input id="style" placeholder="e.g., New England IPA" />
+                <Input
+                  id="style"
+                  placeholder="e.g., New England IPA"
+                  value={formState.style}
+                  onChange={(event) =>
+                    setFormState((previous) => ({
+                      ...previous,
+                      style: event.target.value,
+                    }))
+                  }
+                />
               </Field>
               <Field>
                 <FieldLabel htmlFor="method">Method</FieldLabel>
-                <Select defaultValue="all-grain">
+                <Select
+                  value={formState.method}
+                  onValueChange={(value) =>
+                    setFormState((previous) => ({
+                      ...previous,
+                      method: value as RecipeMethod,
+                    }))
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -117,21 +685,70 @@ export default function NewRecipePage() {
               <div className="grid grid-cols-2 gap-4">
                 <Field>
                   <FieldLabel htmlFor="batchSize">Batch Size (L)</FieldLabel>
-                  <Input id="batchSize" type="number" defaultValue={10} />
+                  <Input
+                    id="batchSize"
+                    type="number"
+                    min={0}
+                    step={0.5}
+                    value={formState.batchSizeL}
+                    onChange={(event) =>
+                      setFormState((previous) => ({
+                        ...previous,
+                        batchSizeL: Number(event.target.value) || 0,
+                      }))
+                    }
+                  />
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="boilSize">Boil Size (L)</FieldLabel>
-                  <Input id="boilSize" type="number" defaultValue={12} />
+                  <Input
+                    id="boilSize"
+                    type="number"
+                    min={0}
+                    step={0.5}
+                    value={formState.boilSizeL}
+                    onChange={(event) =>
+                      setFormState((previous) => ({
+                        ...previous,
+                        boilSizeL: Number(event.target.value) || 0,
+                      }))
+                    }
+                  />
                 </Field>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <Field>
                   <FieldLabel htmlFor="efficiency">Efficiency (%)</FieldLabel>
-                  <Input id="efficiency" type="number" defaultValue={75} />
+                  <Input
+                    id="efficiency"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={formState.efficiency}
+                    onChange={(event) =>
+                      setFormState((previous) => ({
+                        ...previous,
+                        efficiency: Number(event.target.value) || 0,
+                      }))
+                    }
+                  />
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="boilTime">Boil Time (min)</FieldLabel>
-                  <Input id="boilTime" type="number" defaultValue={60} />
+                  <Input
+                    id="boilTime"
+                    type="number"
+                    min={0}
+                    step={5}
+                    value={formState.boilTimeMin}
+                    onChange={(event) =>
+                      setFormState((previous) => ({
+                        ...previous,
+                        boilTimeMin: Number(event.target.value) || 0,
+                      }))
+                    }
+                  />
                 </Field>
               </div>
             </CardContent>
@@ -142,24 +759,91 @@ export default function NewRecipePage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Fermentables</CardTitle>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" onClick={handleAddFermentable}>
+                  <Plus className="mr-2 h-4 w-4" />
                   Add Fermentable
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <Empty className="border-0">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <Wheat />
-                  </EmptyMedia>
-                  <EmptyTitle>No fermentables added yet</EmptyTitle>
-                  <EmptyDescription>
-                    Add grains, extracts, or other fermentables to start
-                    building your recipe
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+              {fermentables.length === 0 ? (
+                <Empty className="border-0">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <Wheat />
+                    </EmptyMedia>
+                    <EmptyTitle>No fermentables added yet</EmptyTitle>
+                    <EmptyDescription>
+                      Add grains, extracts, or other fermentables to start
+                      building your recipe
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <div className="space-y-3">
+                  {fermentables.map((fermentable) => (
+                    <div
+                      key={fermentable.id}
+                      className="flex flex-wrap items-baseline gap-4 rounded-lg border p-3"
+                    >
+                      <div className="min-w-[200px] flex-1">
+                        <Select
+                          value={fermentable.optionId}
+                          onValueChange={(value) =>
+                            handleFermentableSelection(fermentable.id, value)
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select fermentable" />
+                          </SelectTrigger>
+                          <SelectContent align="start" className="min-w-[16rem]">
+                            {FERMENTABLE_OPTIONS.map((option) => (
+                              <SelectItem
+                                key={option.id}
+                                value={option.id}
+                                className="space-y-1 py-2"
+                              >
+                                <div className="text-sm font-medium">{option.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {option.origin} • {option.ppg} ppg • {option.colorLovibond}°L
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="w-full sm:w-32">
+                        <InputGroup>
+                          <InputGroupInput
+                            type="number"
+                            min={0}
+                            step={0.1}
+                            value={fermentable.amountKg}
+                            onChange={(event) =>
+                              handleFermentableAmount(
+                                fermentable.id,
+                                Number(event.target.value) || 0
+                              )
+                            }
+                            aria-label="Fermentable amount (kg)"
+                          />
+                          <InputGroupAddon align="inline-end">
+                            <InputGroupText>kg</InputGroupText>
+                          </InputGroupAddon>
+                        </InputGroup>
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => handleRemoveFermentable(fermentable.id)}
+                        aria-label={`Remove ${fermentable.name}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -217,10 +901,19 @@ export default function NewRecipePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Field>
-                <FieldLabel htmlFor="fermentationTemp">
-                  Fermentation Temp (°C)
-                </FieldLabel>
-                <Input id="fermentationTemp" type="number" defaultValue={20} />
+                <FieldLabel htmlFor="fermentationTemp">Fermentation Temp (°C)</FieldLabel>
+                <Input
+                  id="fermentationTemp"
+                  type="number"
+                  min={0}
+                  value={formState.fermentationTempC}
+                  onChange={(event) =>
+                    setFormState((previous) => ({
+                      ...previous,
+                      fermentationTempC: Number(event.target.value) || 0,
+                    }))
+                  }
+                />
               </Field>
               <div className="p-3 bg-muted rounded-lg">
                 <div className="text-sm space-y-1">
@@ -239,47 +932,251 @@ export default function NewRecipePage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Hops</CardTitle>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" onClick={handleAddHop}>
+                  <Plus className="mr-2 h-4 w-4" />
                   Add Hop
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <Empty className="border-0">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <Beer />
-                  </EmptyMedia>
-                  <EmptyTitle>No hops added yet</EmptyTitle>
-                  <EmptyDescription>
-                    Add hop additions for bitterness, flavor, and aroma
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+              {hops.length === 0 ? (
+                <Empty className="border-0">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <Beer />
+                    </EmptyMedia>
+                    <EmptyTitle>No hops added yet</EmptyTitle>
+                    <EmptyDescription>
+                      Add hop additions for bitterness, flavor, and aroma
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <div className="space-y-3">
+                  {hops.map((hop) => (
+                    <div
+                      key={hop.id}
+                      className="flex flex-wrap items-baseline gap-4 rounded-lg border p-3"
+                    >
+                      <div className="min-w-[200px] flex-1">
+                        <Select
+                          value={hop.optionId}
+                          onValueChange={(value) => handleHopSelection(hop.id, value)}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select hop" />
+                          </SelectTrigger>
+                          <SelectContent align="start" className="min-w-[16rem]">
+                            {HOP_OPTIONS.map((option) => (
+                              <SelectItem
+                                key={option.id}
+                                value={option.id}
+                                className="space-y-1 py-2"
+                              >
+                                <div className="text-sm font-medium">{option.name}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {option.origin} • {option.alphaAcid}% AA
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="w-full sm:w-28">
+                        <InputGroup>
+                          <InputGroupInput
+                            type="number"
+                            min={0}
+                            step={1}
+                            value={hop.amountG}
+                            onChange={(event) =>
+                              handleHopAmount(hop.id, Number(event.target.value) || 0)
+                            }
+                            aria-label="Hop amount (g)"
+                          />
+                          <InputGroupAddon align="inline-end">
+                            <InputGroupText>g</InputGroupText>
+                          </InputGroupAddon>
+                        </InputGroup>
+                      </div>
+                      <div className="w-full sm:min-w-[160px] sm:w-40">
+                        <Select
+                          value={hop.type}
+                          onValueChange={(value) =>
+                            handleHopType(hop.id, value as HopEntry["type"])
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent align="start">
+                            <SelectItem value="boil">Boil</SelectItem>
+                            <SelectItem value="whirlpool">Whirlpool</SelectItem>
+                            <SelectItem value="dry-hop">Dry Hop</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="w-full sm:w-28">
+                        <InputGroup>
+                          <InputGroupInput
+                            type="number"
+                            min={0}
+                            step={5}
+                            value={hop.timeMin}
+                            onChange={(event) =>
+                              handleHopTime(hop.id, Number(event.target.value) || 0)
+                            }
+                            aria-label="Addition time (minutes)"
+                          />
+                          <InputGroupAddon align="inline-end">
+                            <InputGroupText>min</InputGroupText>
+                          </InputGroupAddon>
+                        </InputGroup>
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => handleRemoveHop(hop.id)}
+                        aria-label={`Remove ${hop.name}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
           {/* Water Chemistry */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Water Chemistry</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>Ca: {stats.ionProfile.ca} ppm</div>
-                  <div>Mg: {stats.ionProfile.mg} ppm</div>
-                  <div>Na: {stats.ionProfile.na} ppm</div>
-                  <div>Cl: {stats.ionProfile.cl} ppm</div>
-                  <div>SO₄: {stats.ionProfile.so4} ppm</div>
-                  <div>HCO₃: {stats.ionProfile.hco3} ppm</div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Water Chemistry</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <Field>
+                  <FieldLabel>Base Profile</FieldLabel>
+                  <Select value={waterProfileId} onValueChange={handleWaterProfileChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select water profile" />
+                    </SelectTrigger>
+                    <SelectContent align="start">
+                      {WATER_PROFILE_OPTIONS.map((option) => (
+                        <SelectItem key={option.id} value={option.id}>
+                          <span className="flex flex-col">
+                            <span>{option.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {option.description}
+                            </span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold">Salt Additions</h3>
+                    <Button size="sm" variant="outline" onClick={handleAddWaterAddition}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Salt
+                    </Button>
+                  </div>
+                  {waterAdditions.length === 0 ? (
+                    <Empty className="border-0">
+                      <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                          <Thermometer />
+                        </EmptyMedia>
+                        <EmptyTitle>No salts added yet</EmptyTitle>
+                        <EmptyDescription>
+                          Choose brewing salts to tailor your water profile
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  ) : (
+                    <div className="space-y-3">
+                      {waterAdditions.map((addition) => (
+                        <div
+                          key={addition.id}
+                          className="flex flex-wrap items-center gap-3 rounded-lg border p-3"
+                        >
+                          <div className="min-w-[200px] flex-1">
+                            <Select
+                              value={addition.optionId}
+                              onValueChange={(value) =>
+                                handleWaterAdditionSelection(addition.id, value)
+                              }
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Select salt" />
+                              </SelectTrigger>
+                              <SelectContent align="start">
+                                {SALT_OPTIONS.map((option) => (
+                                  <SelectItem key={option.id} value={option.id}>
+                                    <span className="flex flex-col">
+                                      <span>{option.name}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {option.description}
+                                      </span>
+                                    </span>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="w-28">
+                            <InputGroup>
+                              <InputGroupInput
+                                type="number"
+                                min={0}
+                                step={0.1}
+                                value={addition.amountG}
+                                onChange={(event) =>
+                                  handleWaterAdditionAmount(
+                                    addition.id,
+                                    Number(event.target.value) || 0
+                                  )
+                                }
+                                aria-label="Salt amount (g)"
+                              />
+                              <InputGroupAddon align="inline-end">
+                                <InputGroupText>g</InputGroupText>
+                              </InputGroupAddon>
+                            </InputGroup>
+                          </div>
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={() => handleRemoveWaterAddition(addition.id)}
+                            aria-label={`Remove ${addition.name}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <Button size="sm" variant="outline" className="w-full">
-                  Add Salt
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+
+                <div className="space-y-3 rounded-lg bg-muted p-4 text-sm">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>Ca: {stats.ionProfile.ca} ppm</div>
+                    <div>Mg: {stats.ionProfile.mg} ppm</div>
+                    <div>Na: {stats.ionProfile.na} ppm</div>
+                    <div>Cl: {stats.ionProfile.cl} ppm</div>
+                    <div>SO₄: {stats.ionProfile.so4} ppm</div>
+                    <div>HCO₃: {stats.ionProfile.hco3} ppm</div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
+                    <span>Cl:SO₄ Ratio: {chlorideToSulfateRatio}</span>
+                    <span className="inline-flex h-1 w-1 rounded-full bg-border" />
+                    <span>{waterProfileCharacter}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
           {/* Notes */}
           <Card>
@@ -290,6 +1187,13 @@ export default function NewRecipePage() {
               <Textarea
                 placeholder="Add brewing notes, tips, or observations..."
                 rows={6}
+                value={formState.notes}
+                onChange={(event) =>
+                  setFormState((previous) => ({
+                    ...previous,
+                    notes: event.target.value,
+                  }))
+                }
               />
             </CardContent>
           </Card>
