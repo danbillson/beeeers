@@ -6,17 +6,8 @@
  */
 
 import { useState } from "react";
-import Link from "next/link";
 import { nanoid } from "nanoid";
-import {
-  Save,
-  ArrowLeft,
-  Wheat,
-  Beer,
-  Thermometer,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Save, Wheat, Beer, Thermometer, Plus, Trash2 } from "lucide-react";
 import { RecipeStatsBar } from "@/components/RecipeStatsBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -128,6 +119,13 @@ type WaterAdditionEntry = {
   name: string;
   amountG: number;
   volumeL?: number;
+};
+
+type MashStepEntry = {
+  id: string;
+  stepType: "strike" | "sparge";
+  temperatureC: number;
+  timeMin: number;
 };
 
 const FERMENTABLE_OPTIONS: FermentableOption[] = [
@@ -388,6 +386,7 @@ export default function NewRecipePage() {
   const [waterAdditions, setWaterAdditions] = useState<WaterAdditionEntry[]>(
     []
   );
+  const [mashSteps, setMashSteps] = useState<MashStepEntry[]>([]);
 
   const selectedWaterProfile =
     WATER_PROFILE_OPTIONS.find((option) => option.id === waterProfileId) ??
@@ -442,6 +441,58 @@ export default function NewRecipePage() {
       ? "∞"
       : chlorideToSulfateRatioValue.toFixed(2);
   const waterProfileCharacter = getWaterProfileDescription(stats.ionProfile);
+
+  function handleAddMashStep() {
+    setMashSteps((previous) => [
+      ...previous,
+      {
+        id: nanoid(),
+        stepType:
+          previous.length > 0
+            ? previous[previous.length - 1].stepType
+            : "strike",
+        temperatureC:
+          previous.length > 0 ? previous[previous.length - 1].temperatureC : 66,
+        timeMin:
+          previous.length > 0 ? previous[previous.length - 1].timeMin : 60,
+      },
+    ]);
+  }
+
+  function handleMashStepType(id: string, stepType: MashStepEntry["stepType"]) {
+    setMashSteps((previous) =>
+      previous.map((step) =>
+        step.id === id
+          ? {
+              ...step,
+              stepType,
+            }
+          : step
+      )
+    );
+  }
+
+  function handleMashStepTemperature(id: string, temperature: number) {
+    setMashSteps((previous) =>
+      previous.map((step) =>
+        step.id === id
+          ? { ...step, temperatureC: temperature < 0 ? 0 : temperature }
+          : step
+      )
+    );
+  }
+
+  function handleMashStepTime(id: string, time: number) {
+    setMashSteps((previous) =>
+      previous.map((step) =>
+        step.id === id ? { ...step, timeMin: time < 0 ? 0 : time } : step
+      )
+    );
+  }
+
+  function handleRemoveMashStep(id: string) {
+    setMashSteps((previous) => previous.filter((step) => step.id !== id));
+  }
 
   function handleAddFermentable() {
     const option = FERMENTABLE_OPTIONS[0];
@@ -633,17 +684,9 @@ export default function NewRecipePage() {
 
       {/* Recipe Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/recipes">
-            <Button variant="outline" size="sm">
-              <ArrowLeft />
-              Back to Recipes
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">New Recipe</h1>
-            <p className="text-muted-foreground">Create a new brewing recipe</p>
-          </div>
+        <div>
+          <h1 className="text-3xl font-bold">New Recipe</h1>
+          <p className="text-muted-foreground">Create a new brewing recipe</p>
         </div>
         <Button>
           <Save />
@@ -816,7 +859,7 @@ export default function NewRecipePage() {
                   {fermentables.map((fermentable) => (
                     <div
                       key={fermentable.id}
-                      className="flex flex-wrap items-baseline gap-4 rounded-lg border p-3"
+                      className="flex flex-wrap items-center gap-4 rounded-lg border p-3"
                     >
                       <div className="min-w-[200px] flex-1">
                         <Select
@@ -839,7 +882,7 @@ export default function NewRecipePage() {
                                     {option.name}
                                   </div>
                                   <div className="text-xs text-muted-foreground">
-                                  {option.origin} • {option.color}°L
+                                    {option.origin} • {option.color}°L
                                   </div>
                                 </div>
                               </SelectItem>
@@ -885,20 +928,118 @@ export default function NewRecipePage() {
           {/* Mash Guidelines */}
           <Card>
             <CardHeader>
-              <CardTitle>Mash Schedule</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Mash Schedule</CardTitle>
+                <Button size="sm" variant="outline" onClick={handleAddMashStep}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Step
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent>
-              <Empty className="border-0">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <Thermometer />
-                  </EmptyMedia>
-                  <EmptyTitle>No mash schedule defined</EmptyTitle>
-                  <EmptyDescription>
-                    Add fermentables to see mash calculations
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
+            <CardContent className="space-y-4">
+              {mashSteps.length === 0 ? (
+                <Empty className="border-0">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <Thermometer />
+                    </EmptyMedia>
+                    <EmptyTitle>No mash steps added yet</EmptyTitle>
+                    <EmptyDescription>
+                      Use “Add Step” to capture each rest temperature and hold
+                      time
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <div className="space-y-3">
+                  {mashSteps.map((step, index) => (
+                    <div
+                      key={step.id}
+                      className="flex flex-wrap items-end gap-4 rounded-lg border p-3"
+                    >
+                      <div className="min-w-[160px] flex-1 space-y-1">
+                        <FieldLabel className="text-xs text-muted-foreground">
+                          Type
+                        </FieldLabel>
+                        <Select
+                          value={step.stepType}
+                          onValueChange={(value) =>
+                            handleMashStepType(
+                              step.id,
+                              value as MashStepEntry["stepType"]
+                            )
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select step type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="strike">Strike</SelectItem>
+                            <SelectItem value="sparge">Sparge</SelectItem>
+                            <SelectItem value="mashout">Mashout</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex-1 min-w-[100px] space-y-1">
+                        <FieldLabel className="text-xs text-muted-foreground">
+                          Temperature
+                        </FieldLabel>
+                        <InputGroup>
+                          <InputGroupInput
+                            type="number"
+                            step={0.5}
+                            min={0}
+                            value={step.temperatureC}
+                            onChange={(event) =>
+                              handleMashStepTemperature(
+                                step.id,
+                                Number(event.target.value) || 0
+                              )
+                            }
+                            aria-label={`Mash step ${
+                              index + 1
+                            } temperature (°C)`}
+                          />
+                          <InputGroupAddon align="inline-end">
+                            <InputGroupText>°C</InputGroupText>
+                          </InputGroupAddon>
+                        </InputGroup>
+                      </div>
+                      <div className="flex-1 min-w-[100px] space-y-1">
+                        <FieldLabel className="text-xs text-muted-foreground">
+                          Time
+                        </FieldLabel>
+                        <InputGroup>
+                          <InputGroupInput
+                            type="number"
+                            min={0}
+                            step={5}
+                            value={step.timeMin}
+                            onChange={(event) =>
+                              handleMashStepTime(
+                                step.id,
+                                Number(event.target.value) || 0
+                              )
+                            }
+                            aria-label={`Mash step ${index + 1} time (minutes)`}
+                          />
+                          <InputGroupAddon align="inline-end">
+                            <InputGroupText>min</InputGroupText>
+                          </InputGroupAddon>
+                        </InputGroup>
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => handleRemoveMashStep(step.id)}
+                        aria-label={`Remove mash step ${index + 1}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -966,9 +1107,9 @@ export default function NewRecipePage() {
                   {hops.map((hop) => (
                     <div
                       key={hop.id}
-                      className="flex flex-wrap items-baseline gap-4 rounded-lg border p-3"
+                      className="flex flex-wrap items-center gap-4 rounded-lg border p-3"
                     >
-                      <div className="min-w-[200px] flex-1">
+                      <div className="min-w-[160px] flex-1">
                         <Select
                           value={hop.optionId}
                           onValueChange={(value) =>
@@ -997,7 +1138,7 @@ export default function NewRecipePage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="w-full sm:w-28">
+                      <div className="w-full sm:w-20">
                         <InputGroup>
                           <InputGroupInput
                             type="number"
@@ -1017,7 +1158,7 @@ export default function NewRecipePage() {
                           </InputGroupAddon>
                         </InputGroup>
                       </div>
-                      <div className="w-full sm:min-w-[160px] sm:w-40">
+                      <div className="w-full sm:min-w-[120px] sm:w-30">
                         <Select
                           value={hop.type}
                           onValueChange={(value) =>
@@ -1034,7 +1175,7 @@ export default function NewRecipePage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="w-full sm:w-28">
+                      <div className="w-full sm:w-24">
                         <InputGroup>
                           <InputGroupInput
                             type="number"
@@ -1059,6 +1200,7 @@ export default function NewRecipePage() {
                         variant="outline"
                         onClick={() => handleRemoveHop(hop.id)}
                         aria-label={`Remove ${hop.name}`}
+                        className="ml-auto"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
