@@ -888,33 +888,6 @@ export default function NewRecipePage() {
             </CardContent>
           </Card>
 
-          {/* Yeast */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Yeast</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Field>
-                <FieldLabel>Yeast Strain</FieldLabel>
-                <Select defaultValue="">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select yeast strain" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="us-05">US-05 (Safale)</SelectItem>
-                    <SelectItem value="s-04">S-04 (Safale)</SelectItem>
-                    <SelectItem value="wlp001">WLP001 (White Labs)</SelectItem>
-                    <SelectItem value="kveik">Kveik (Lallemand)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="pitchAmount">Pitch Amount (g)</FieldLabel>
-                <Input id="pitchAmount" type="number" placeholder="11" />
-              </Field>
-            </CardContent>
-          </Card>
-
           {/* Priming */}
           <Card>
             <CardHeader>
@@ -1079,6 +1052,33 @@ export default function NewRecipePage() {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Yeast */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Yeast</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Field>
+                <FieldLabel>Yeast Strain</FieldLabel>
+                <Select defaultValue="">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select yeast strain" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="us-05">US-05 (Safale)</SelectItem>
+                    <SelectItem value="s-04">S-04 (Safale)</SelectItem>
+                    <SelectItem value="wlp001">WLP001 (White Labs)</SelectItem>
+                    <SelectItem value="kveik">Kveik (Lallemand)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="pitchAmount">Pitch Amount (g)</FieldLabel>
+                <Input id="pitchAmount" type="number" placeholder="11" />
+              </Field>
             </CardContent>
           </Card>
 
