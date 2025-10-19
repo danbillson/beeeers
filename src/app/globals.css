@@ -120,9 +120,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-/* Scaled Theme - Compact UI */
-:is(.theme-scaled .theme-container, .theme-scaled [data-radix-popper-content-wrapper]) [data-slot=select-trigger],
-:is(.theme-scaled .theme-container, .theme-scaled [data-radix-popper-content-wrapper]) [data-slot=toggle-group-item] {
-  --spacing: .2rem;
-}

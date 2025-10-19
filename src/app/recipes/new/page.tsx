@@ -8,7 +8,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { nanoid } from "nanoid";
-import { Save, ArrowLeft, Wheat, Beer, Thermometer, Plus, Trash2 } from "lucide-react";
+import {
+  Save,
+  ArrowLeft,
+  Wheat,
+  Beer,
+  Thermometer,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { RecipeStatsBar } from "@/components/RecipeStatsBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -369,25 +377,31 @@ export default function NewRecipePage() {
   });
   const [fermentables, setFermentables] = useState<FermentableEntry[]>([]);
   const [hops, setHops] = useState<HopEntry[]>([]);
-  const [waterProfileId, setWaterProfileId] = useState(DEFAULT_WATER_PROFILE_ID);
-  const [waterAdditions, setWaterAdditions] = useState<WaterAdditionEntry[]>([]);
+  const [waterProfileId, setWaterProfileId] = useState(
+    DEFAULT_WATER_PROFILE_ID
+  );
+  const [waterAdditions, setWaterAdditions] = useState<WaterAdditionEntry[]>(
+    []
+  );
 
   const selectedWaterProfile =
     WATER_PROFILE_OPTIONS.find((option) => option.id === waterProfileId) ??
     WATER_PROFILE_OPTIONS[0];
   const baseWaterProfile = selectedWaterProfile.profile;
-  const waterAdditionsForCalc: SaltAddition[] = waterAdditions.flatMap((addition) => {
-    const salt = SALT_COMPOSITIONS[addition.name];
-    if (!salt || addition.amountG <= 0) {
-      return [];
-    }
+  const waterAdditionsForCalc: SaltAddition[] = waterAdditions.flatMap(
+    (addition) => {
+      const salt = SALT_COMPOSITIONS[addition.name];
+      if (!salt || addition.amountG <= 0) {
+        return [];
+      }
 
-    return Object.keys(salt).map((ion) => ({
-      name: addition.name,
-      amountG: addition.amountG,
-      ionType: ion as SaltAddition["ionType"],
-    }));
-  });
+      return Object.keys(salt).map((ion) => ({
+        name: addition.name,
+        amountG: addition.amountG,
+        ionType: ion as SaltAddition["ionType"],
+      }));
+    }
+  );
 
   const stats = useRecipeCalculations({
     fermentables: fermentables.map((fermentable) => ({
@@ -759,7 +773,11 @@ export default function NewRecipePage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Fermentables</CardTitle>
-                <Button size="sm" variant="outline" onClick={handleAddFermentable}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleAddFermentable}
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Fermentable
                 </Button>
@@ -796,16 +814,19 @@ export default function NewRecipePage() {
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select fermentable" />
                           </SelectTrigger>
-                          <SelectContent align="start" className="min-w-[16rem]">
+                          <SelectContent
+                            align="start"
+                            className="min-w-[16rem]"
+                          >
                             {FERMENTABLE_OPTIONS.map((option) => (
-                              <SelectItem
-                                key={option.id}
-                                value={option.id}
-                                className="space-y-1 py-2"
-                              >
-                                <div className="text-sm font-medium">{option.name}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {option.origin} • {option.ppg} ppg • {option.colorLovibond}°L
+                              <SelectItem key={option.id} value={option.id}>
+                                <div className="flex gap-2 items-baseline">
+                                  <div className="text-sm font-medium">
+                                    {option.name}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {option.origin} • {option.colorLovibond}°L
+                                  </div>
                                 </div>
                               </SelectItem>
                             ))}
@@ -901,7 +922,9 @@ export default function NewRecipePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Field>
-                <FieldLabel htmlFor="fermentationTemp">Fermentation Temp (°C)</FieldLabel>
+                <FieldLabel htmlFor="fermentationTemp">
+                  Fermentation Temp (°C)
+                </FieldLabel>
                 <Input
                   id="fermentationTemp"
                   type="number"
@@ -961,21 +984,26 @@ export default function NewRecipePage() {
                       <div className="min-w-[200px] flex-1">
                         <Select
                           value={hop.optionId}
-                          onValueChange={(value) => handleHopSelection(hop.id, value)}
+                          onValueChange={(value) =>
+                            handleHopSelection(hop.id, value)
+                          }
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select hop" />
                           </SelectTrigger>
-                          <SelectContent align="start" className="min-w-[16rem]">
+                          <SelectContent
+                            align="start"
+                            className="min-w-[16rem]"
+                          >
                             {HOP_OPTIONS.map((option) => (
-                              <SelectItem
-                                key={option.id}
-                                value={option.id}
-                                className="space-y-1 py-2"
-                              >
-                                <div className="text-sm font-medium">{option.name}</div>
-                                <div className="text-xs text-muted-foreground">
-                                  {option.origin} • {option.alphaAcid}% AA
+                              <SelectItem key={option.id} value={option.id}>
+                                <div className="flex gap-2 items-baseline">
+                                  <div className="text-sm font-medium">
+                                    {option.name}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {option.origin} • {option.alphaAcid}% AA
+                                  </div>
                                 </div>
                               </SelectItem>
                             ))}
@@ -990,7 +1018,10 @@ export default function NewRecipePage() {
                             step={1}
                             value={hop.amountG}
                             onChange={(event) =>
-                              handleHopAmount(hop.id, Number(event.target.value) || 0)
+                              handleHopAmount(
+                                hop.id,
+                                Number(event.target.value) || 0
+                              )
                             }
                             aria-label="Hop amount (g)"
                           />
@@ -1024,7 +1055,10 @@ export default function NewRecipePage() {
                             step={5}
                             value={hop.timeMin}
                             onChange={(event) =>
-                              handleHopTime(hop.id, Number(event.target.value) || 0)
+                              handleHopTime(
+                                hop.id,
+                                Number(event.target.value) || 0
+                              )
                             }
                             aria-label="Addition time (minutes)"
                           />
@@ -1049,134 +1083,141 @@ export default function NewRecipePage() {
           </Card>
 
           {/* Water Chemistry */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Water Chemistry</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <Field>
-                  <FieldLabel>Base Profile</FieldLabel>
-                  <Select value={waterProfileId} onValueChange={handleWaterProfileChange}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select water profile" />
-                    </SelectTrigger>
-                    <SelectContent align="start">
-                      {WATER_PROFILE_OPTIONS.map((option) => (
-                        <SelectItem key={option.id} value={option.id}>
-                          <span className="flex flex-col">
-                            <span>{option.name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {option.description}
-                            </span>
+          <Card>
+            <CardHeader>
+              <CardTitle>Water Chemistry</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <Field>
+                <FieldLabel>Base Profile</FieldLabel>
+                <Select
+                  value={waterProfileId}
+                  onValueChange={handleWaterProfileChange}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select water profile" />
+                  </SelectTrigger>
+                  <SelectContent align="start">
+                    {WATER_PROFILE_OPTIONS.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        <div className="flex flex-col items-start">
+                          <span>{option.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {option.description}
                           </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold">Salt Additions</h3>
-                    <Button size="sm" variant="outline" onClick={handleAddWaterAddition}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Salt
-                    </Button>
-                  </div>
-                  {waterAdditions.length === 0 ? (
-                    <Empty className="border-0">
-                      <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                          <Thermometer />
-                        </EmptyMedia>
-                        <EmptyTitle>No salts added yet</EmptyTitle>
-                        <EmptyDescription>
-                          Choose brewing salts to tailor your water profile
-                        </EmptyDescription>
-                      </EmptyHeader>
-                    </Empty>
-                  ) : (
-                    <div className="space-y-3">
-                      {waterAdditions.map((addition) => (
-                        <div
-                          key={addition.id}
-                          className="flex flex-wrap items-center gap-3 rounded-lg border p-3"
-                        >
-                          <div className="min-w-[200px] flex-1">
-                            <Select
-                              value={addition.optionId}
-                              onValueChange={(value) =>
-                                handleWaterAdditionSelection(addition.id, value)
-                              }
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select salt" />
-                              </SelectTrigger>
-                              <SelectContent align="start">
-                                {SALT_OPTIONS.map((option) => (
-                                  <SelectItem key={option.id} value={option.id}>
-                                    <span className="flex flex-col">
-                                      <span>{option.name}</span>
-                                      <span className="text-xs text-muted-foreground">
-                                        {option.description}
-                                      </span>
-                                    </span>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="w-28">
-                            <InputGroup>
-                              <InputGroupInput
-                                type="number"
-                                min={0}
-                                step={0.1}
-                                value={addition.amountG}
-                                onChange={(event) =>
-                                  handleWaterAdditionAmount(
-                                    addition.id,
-                                    Number(event.target.value) || 0
-                                  )
-                                }
-                                aria-label="Salt amount (g)"
-                              />
-                              <InputGroupAddon align="inline-end">
-                                <InputGroupText>g</InputGroupText>
-                              </InputGroupAddon>
-                            </InputGroup>
-                          </div>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            onClick={() => handleRemoveWaterAddition(addition.id)}
-                            aria-label={`Remove ${addition.name}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
 
-                <div className="space-y-3 rounded-lg bg-muted p-4 text-sm">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>Ca: {stats.ionProfile.ca} ppm</div>
-                    <div>Mg: {stats.ionProfile.mg} ppm</div>
-                    <div>Na: {stats.ionProfile.na} ppm</div>
-                    <div>Cl: {stats.ionProfile.cl} ppm</div>
-                    <div>SO₄: {stats.ionProfile.so4} ppm</div>
-                    <div>HCO₃: {stats.ionProfile.hco3} ppm</div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
-                    <span>Cl:SO₄ Ratio: {chlorideToSulfateRatio}</span>
-                    <span className="inline-flex h-1 w-1 rounded-full bg-border" />
-                    <span>{waterProfileCharacter}</span>
-                  </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">Salt Additions</h3>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAddWaterAddition}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Salt
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
+                {waterAdditions.length === 0 ? (
+                  <Empty className="border-0">
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <Thermometer />
+                      </EmptyMedia>
+                      <EmptyTitle>No salts added yet</EmptyTitle>
+                      <EmptyDescription>
+                        Choose brewing salts to tailor your water profile
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
+                ) : (
+                  <div className="space-y-3">
+                    {waterAdditions.map((addition) => (
+                      <div
+                        key={addition.id}
+                        className="flex flex-wrap items-center gap-3 rounded-lg border p-3"
+                      >
+                        <div className="min-w-[200px] flex-1">
+                          <Select
+                            value={addition.optionId}
+                            onValueChange={(value) =>
+                              handleWaterAdditionSelection(addition.id, value)
+                            }
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select salt" />
+                            </SelectTrigger>
+                            <SelectContent align="start">
+                              {SALT_OPTIONS.map((option) => (
+                                <SelectItem key={option.id} value={option.id}>
+                                  <div className="flex flex-col items-start">
+                                    <span>{option.name}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {option.description}
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="w-28">
+                          <InputGroup>
+                            <InputGroupInput
+                              type="number"
+                              min={0}
+                              step={0.1}
+                              value={addition.amountG}
+                              onChange={(event) =>
+                                handleWaterAdditionAmount(
+                                  addition.id,
+                                  Number(event.target.value) || 0
+                                )
+                              }
+                              aria-label="Salt amount (g)"
+                            />
+                            <InputGroupAddon align="inline-end">
+                              <InputGroupText>g</InputGroupText>
+                            </InputGroupAddon>
+                          </InputGroup>
+                        </div>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          onClick={() => handleRemoveWaterAddition(addition.id)}
+                          aria-label={`Remove ${addition.name}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3 rounded-lg bg-muted p-4 text-sm">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>Ca: {stats.ionProfile.ca} ppm</div>
+                  <div>Mg: {stats.ionProfile.mg} ppm</div>
+                  <div>Na: {stats.ionProfile.na} ppm</div>
+                  <div>Cl: {stats.ionProfile.cl} ppm</div>
+                  <div>SO₄: {stats.ionProfile.so4} ppm</div>
+                  <div>HCO₃: {stats.ionProfile.hco3} ppm</div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
+                  <span>Cl:SO₄ Ratio: {chlorideToSulfateRatio}</span>
+                  <span className="inline-flex h-1 w-1 rounded-full bg-border" />
+                  <span>{waterProfileCharacter}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Notes */}
           <Card>
