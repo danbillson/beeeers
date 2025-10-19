@@ -16,6 +16,7 @@ export interface SaltAddition {
   name: string;
   amountG: number;
   ionType: "ca" | "mg" | "na" | "cl" | "so4" | "hco3";
+  volumeL: number;
 }
 
 /**
@@ -23,12 +24,15 @@ export interface SaltAddition {
  * Common brewing salts and their ion contributions
  */
 export const SALT_COMPOSITIONS: Record<string, Partial<IonProfile>> = {
-  "Gypsum (CaSO4)": { ca: 147, so4: 349 }, // per 100g
-  "Calcium Chloride (CaCl2)": { ca: 136, cl: 240 },
-  "Epsom Salt (MgSO4)": { mg: 99, so4: 389 },
-  "Table Salt (NaCl)": { na: 393, cl: 607 },
+  "Gypsum (CaSO4·2H2O)": { ca: 232.8, so4: 557.7 },
+  "Gypsum (CaSO4)": { ca: 232.8, so4: 557.7 },
+  "Calcium Chloride (CaCl2·2H2O)": { ca: 272.6, cl: 482.3 },
+  "Calcium Chloride (CaCl2)": { ca: 272.6, cl: 482.3 },
+  "Epsom Salt (MgSO4·7H2O)": { mg: 98.6, so4: 389.6 },
+  "Epsom Salt (MgSO4)": { mg: 98.6, so4: 389.6 },
+  "Table Salt (NaCl)": { na: 393, cl: 608 },
   "Chalk (CaCO3)": { ca: 400, hco3: 610 },
-  "Baking Soda (NaHCO3)": { na: 274, hco3: 714 },
+  "Baking Soda (NaHCO3)": { na: 274, hco3: 726 },
 };
 
 /**
@@ -44,16 +48,18 @@ export function calculateWaterProfile(
     const saltComposition = SALT_COMPOSITIONS[addition.name];
     if (!saltComposition) return;
 
-    // Convert grams to ppm contribution (assuming 1L water = 1kg)
-    const ppmPerGram = 1000; // 1g in 1L = 1000ppm
+    const ppmPerGramPerLiter =
+      saltComposition[addition.ionType] ?? 0;
+    if (ppmPerGramPerLiter === 0) return;
 
-    Object.entries(saltComposition).forEach(([ion, contribution]) => {
-      if (contribution && addition.ionType === ion) {
-        const contributionPpm =
-          (contribution / 100) * addition.amountG * ppmPerGram;
-        result[ion as keyof IonProfile] += contributionPpm;
-      }
-    });
+    const treatedVolume =
+      addition.volumeL > 0 ? addition.volumeL : 1;
+
+    const contributionPpm =
+      (addition.amountG / treatedVolume) * ppmPerGramPerLiter;
+
+    result[addition.ionType] =
+      Math.max(0, (result[addition.ionType] ?? 0) + contributionPpm);
   });
 
   return {

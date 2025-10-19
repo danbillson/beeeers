@@ -16,25 +16,25 @@ import {
 } from "@/lib/calc";
 
 // NEIPA recipe ingredients
-// PPG values are points per kg per L - typical values are 36-40 for base malts
+// Potential values expressed in PPG (points per pound per gallon)
 const neipaFermentables: Fermentable[] = [
-  { ppg: 36, amountKg: 1.8, efficiency: 0.75 }, // Pale 2-Row (36 PPG) - reduced to 1.8kg
-  { ppg: 35, amountKg: 0.3, efficiency: 0.75 }, // Munich (35 PPG)
-  { ppg: 36, amountKg: 0.3, efficiency: 0.75 }, // Wheat (36 PPG)
-  { ppg: 32, amountKg: 0.3, efficiency: 0.75 }, // Crystal 60 (32 PPG) - increased for color
+  { potential: 36, amountKg: 1.8, efficiency: 0.75 },
+  { potential: 35, amountKg: 0.3, efficiency: 0.75 },
+  { potential: 36, amountKg: 0.3, efficiency: 0.75 },
+  { potential: 32, amountKg: 0.3, efficiency: 0.75 },
 ];
 
 const neipaHops: Hop[] = [
-  { alphaAcid: 14, amountG: 3, timeMin: 60, type: "boil" }, // Magnum (bittering) - reduced to 3g
-  { alphaAcid: 12, amountG: 4, timeMin: 5, type: "whirlpool" }, // Citra (whirlpool) - reduced to 4g
-  { alphaAcid: 12, amountG: 30, timeMin: 0, type: "dry-hop" }, // Mosaic (dry hop)
+  { alphaAcid: 14, amountG: 3, timeMin: 60, type: "boil" },
+  { alphaAcid: 12, amountG: 4, timeMin: 5, type: "whirlpool", temperatureC: 80 },
+  { alphaAcid: 12, amountG: 30, timeMin: 0, type: "dry-hop" },
 ];
 
 const neipaFermentablesColor: FermentableColor[] = [
-  { colorLovibond: 2, amountKg: 1.8 }, // Pale 2-Row
-  { colorLovibond: 9, amountKg: 0.3 }, // Munich
-  { colorLovibond: 2, amountKg: 0.3 }, // Wheat
-  { colorLovibond: 60, amountKg: 0.3 }, // Crystal 60 - increased for color
+  { color: 2, amountKg: 1.8 },
+  { color: 9, amountKg: 0.3 },
+  { color: 2, amountKg: 0.3 },
+  { color: 60, amountKg: 0.3 },
 ];
 
 // Recipe parameters
@@ -60,12 +60,12 @@ export function validateNEIPACalculations() {
   const og = calculateOG(neipaFermentables, batchSizeL, efficiency);
   const fg = calculateFG(og, yeastAttenuation);
   const abvResult = calculateABV(og, fg);
-  const ibuResult = calculateIBU(
-    neipaHops,
-    batchSizeL,
+  const ibuResult = calculateIBU(neipaHops, {
+    finalVolumeL: batchSizeL,
+    preBoilVolumeL: 12,
     og,
-    hopUtilizationMultiplier
-  );
+    utilizationMultiplier: hopUtilizationMultiplier,
+  });
   const srm = calculateSRM(neipaFermentablesColor, batchSizeL);
 
   // Results

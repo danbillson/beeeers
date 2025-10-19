@@ -2,76 +2,98 @@
  * Priming sugar calculations for carbonation
  */
 
+export type PrimingSugarType = "sucrose" | "dextrose";
+
 export interface PrimingResult {
   sugarAmountG: number;
   co2Volumes: number;
   residualCO2: number;
+  sugarType: PrimingSugarType;
 }
 
-/**
- * Calculate residual CO2 based on fermentation temperature
- * Higher fermentation temperature = lower residual CO2
- */
+const SUGAR_FACTORS: Record<PrimingSugarType, number> = {
+  sucrose: 3.49,
+  dextrose: 4.04,
+};
+
+const RESIDUAL_CO2_TABLE = [
+  { tempC: 0, volumes: 1.7 },
+  { tempC: 4, volumes: 1.53 },
+  { tempC: 7, volumes: 1.43 },
+  { tempC: 10, volumes: 1.37 },
+  { tempC: 13, volumes: 1.28 },
+  { tempC: 16, volumes: 1.20 },
+  { tempC: 18, volumes: 1.13 },
+  { tempC: 21, volumes: 1.05 },
+  { tempC: 24, volumes: 0.99 },
+  { tempC: 27, volumes: 0.93 },
+  { tempC: 30, volumes: 0.88 },
+];
+
+const interpolateResidualCO2 = (tempC: number): number => {
+  if (tempC <= RESIDUAL_CO2_TABLE[0].tempC) {
+    return RESIDUAL_CO2_TABLE[0].volumes;
+  }
+
+  for (let i = 1; i < RESIDUAL_CO2_TABLE.length; i += 1) {
+    const lower = RESIDUAL_CO2_TABLE[i - 1];
+    const upper = RESIDUAL_CO2_TABLE[i];
+
+    if (tempC <= upper.tempC) {
+      const fraction =
+        (tempC - lower.tempC) / (upper.tempC - lower.tempC);
+      return lower.volumes + fraction * (upper.volumes - lower.volumes);
+    }
+  }
+
+  return RESIDUAL_CO2_TABLE[RESIDUAL_CO2_TABLE.length - 1].volumes;
+};
+
 function calculateResidualCO2(fermentationTempC: number): number {
-  // Simplified formula based on temperature
-  // More accurate formulas exist but this covers the basic range
-  if (fermentationTempC <= 12) return 1.5; // Lager range
-  if (fermentationTempC <= 18) return 1.0; // Ale range
-  if (fermentationTempC <= 24) return 0.8; // Warm fermentation
-  return 0.6; // Very warm fermentation
+  const residual = interpolateResidualCO2(fermentationTempC);
+  return Math.round(residual * 100) / 100;
+}
+
+function roundToTenth(value: number): number {
+  return Math.round(value * 10) / 10;
 }
 
 /**
- * Calculate priming sugar amount for target CO2 volumes
- * Uses sucrose as the standard priming sugar
+ * Calculate priming sugar amount for a target CO₂ volume.
  */
 export function calculatePrimingSugar(
   batchSizeL: number,
   targetCO2Volumes: number = 2.4,
-  fermentationTempC: number = 20
+  fermentationTempC: number = 20,
+  sugarType: PrimingSugarType = "sucrose"
 ): PrimingResult {
   const residualCO2 = calculateResidualCO2(fermentationTempC);
-  const co2Needed = targetCO2Volumes - residualCO2;
+  const co2Needed = Math.max(targetCO2Volumes - residualCO2, 0);
 
-  // Sugar needed per liter (grams)
-  // 1g sucrose produces ~0.5 volumes of CO2
-  const sugarPerLiter = co2Needed / 0.5;
-  const totalSugarG = sugarPerLiter * batchSizeL;
+  const factor = SUGAR_FACTORS[sugarType] ?? SUGAR_FACTORS.sucrose;
+  const sugarAmountG = roundToTenth(co2Needed * batchSizeL * factor);
 
   return {
-    sugarAmountG: Math.round(totalSugarG * 10) / 10, // Round to 1 decimal
+    sugarAmountG,
     co2Volumes: targetCO2Volumes,
     residualCO2,
+    sugarType,
   };
 }
 
 /**
- * Calculate priming sugar for different sugar types
+ * Convenience wrapper to calculate priming sugar by sugar type.
  */
 export function calculatePrimingSugarByType(
   batchSizeL: number,
   targetCO2Volumes: number = 2.4,
   fermentationTempC: number = 20,
-  sugarType: "sucrose" | "glucose" | "fructose" | "maltose" = "sucrose"
+  sugarType: PrimingSugarType = "sucrose"
 ): PrimingResult {
-  const residualCO2 = calculateResidualCO2(fermentationTempC);
-  const co2Needed = targetCO2Volumes - residualCO2;
-
-  // Different sugars have different efficiency
-  const sugarEfficiency: Record<string, number> = {
-    sucrose: 0.5,
-    glucose: 0.5,
-    fructose: 0.5,
-    maltose: 0.6, // Less efficient
-  };
-
-  const efficiency = sugarEfficiency[sugarType];
-  const sugarPerLiter = co2Needed / efficiency;
-  const totalSugarG = sugarPerLiter * batchSizeL;
-
-  return {
-    sugarAmountG: Math.round(totalSugarG * 10) / 10,
-    co2Volumes: targetCO2Volumes,
-    residualCO2,
-  };
+  return calculatePrimingSugar(
+    batchSizeL,
+    targetCO2Volumes,
+    fermentationTempC,
+    sugarType
+  );
 }

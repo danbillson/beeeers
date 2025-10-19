@@ -32,9 +32,9 @@ const mockRecipe = {
   hopUtilizationMultiplier: 0.88,
   notes: "Hazy IPA with tropical fruit notes",
   fermentables: [
-    { ingredient: { ppg: 3.0, colorLovibond: 2 }, amountKg: 2.5 },
-    { ingredient: { ppg: 2.9, colorLovibond: 9 }, amountKg: 0.5 },
-    { ingredient: { ppg: 3.0, colorLovibond: 2 }, amountKg: 0.3 },
+    { ingredient: { potential: 36, color: 2 }, amountKg: 2.5 },
+    { ingredient: { potential: 35, color: 9 }, amountKg: 0.5 },
+    { ingredient: { potential: 38, color: 2 }, amountKg: 0.3 },
   ],
   hops: [
     {
@@ -42,18 +42,22 @@ const mockRecipe = {
       amountG: 15,
       timeMin: 60,
       type: "boil" as const,
+      name: "Citra",
     },
     {
       ingredient: { alphaAcid: 12 },
       amountG: 25,
       timeMin: 5,
       type: "whirlpool" as const,
+      name: "Mosaic",
+      temperatureC: 80,
     },
     {
       ingredient: { alphaAcid: 12 },
       amountG: 30,
       timeMin: 0,
       type: "dry-hop" as const,
+      name: "Galaxy",
     },
   ],
   yeast: { ingredient: { attenuationMin: 73, attenuationMax: 77 } },

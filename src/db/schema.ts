@@ -80,7 +80,7 @@ export const ingredients = pgTable("ingredients", {
   kind: ingredientKindEnum("kind").notNull(),
   name: text("name").notNull(),
   origin: text("origin"),
-  ppg: real("ppg"), // Points per kg per L
+  ppg: real("ppg"), // Potential in PPG (points per pound per gallon)
   colorLovibond: real("color_lovibond"),
   alphaAcid: real("alpha_acid"), // For hops
   attenuationMin: real("attenuation_min"), // For yeast

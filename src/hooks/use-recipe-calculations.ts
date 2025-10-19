@@ -21,14 +21,25 @@ import {
 
 export interface RecipeCalculationData {
   fermentables: Array<{
-    ingredient: { ppg: number; colorLovibond: number };
+    ingredient: {
+      potential?: number;
+      ppg?: number;
+      potentialUnit?: "PPG" | "PKL";
+      color?: number;
+      colorLovibond?: number;
+      colorUnit?: "L" | "SRM" | "EBC";
+      efficiencyOverride?: number;
+    };
     amountKg: number;
+    efficiencyOverride?: number;
   }>;
   hops: Array<{
     ingredient: { alphaAcid: number };
     amountG: number;
     timeMin: number;
     type: "boil" | "whirlpool" | "dry-hop";
+    name?: string;
+    temperatureC?: number;
   }>;
   yeast: {
     ingredient: { attenuationMin: number; attenuationMax: number };
@@ -37,6 +48,7 @@ export interface RecipeCalculationData {
     name: string;
     amountG: number;
     ionType: string;
+    volumeL?: number;
   }>;
   batchSizeL: number;
   boilSizeL: number;
@@ -78,25 +90,38 @@ export function useRecipeCalculations(
 ): RecipeCalculations {
   return useMemo(() => {
     // Extract fermentables for gravity and color calculations
-    const fermentables: Fermentable[] = data.fermentables.map((f) => ({
-      ppg: f.ingredient.ppg,
-      amountKg: f.amountKg,
-      efficiency: data.efficiency / 100,
-    }));
+    const fermentables: Fermentable[] = data.fermentables.map((f) => {
+      const potential =
+        f.ingredient.potential ?? f.ingredient.ppg ?? 0;
+
+      return {
+        potential,
+        yieldUnit: f.ingredient.potentialUnit ?? "PPG",
+        amountKg: f.amountKg,
+        efficiency:
+          f.efficiencyOverride ??
+          f.ingredient.efficiencyOverride ??
+          data.efficiency / 100,
+      };
+    });
 
     const fermentablesColor: FermentableColor[] = data.fermentables.map(
       (f) => ({
-        colorLovibond: f.ingredient.colorLovibond,
+        color:
+          f.ingredient.color ?? f.ingredient.colorLovibond ?? 0,
+        unit: f.ingredient.colorUnit ?? "L",
         amountKg: f.amountKg,
       })
     );
 
     // Extract hops for IBU calculation
     const hops: Hop[] = data.hops.map((h) => ({
+      name: h.name,
       alphaAcid: h.ingredient.alphaAcid,
       amountG: h.amountG,
       timeMin: h.timeMin,
       type: h.type,
+      temperatureC: h.temperatureC,
     }));
 
     // Calculate gravity
@@ -115,12 +140,12 @@ export function useRecipeCalculations(
 
     // Calculate other metrics
     const abvResult = calculateABV(og, fg);
-    const ibuResult = calculateIBU(
-      hops,
-      data.batchSizeL,
+    const ibuResult = calculateIBU(hops, {
+      finalVolumeL: data.batchSizeL,
+      preBoilVolumeL: data.boilSizeL,
       og,
-      data.hopUtilizationMultiplier
-    );
+      utilizationMultiplier: data.hopUtilizationMultiplier,
+    });
     const srm = calculateSRM(fermentablesColor, data.batchSizeL);
 
     // Calculate water volumes (simplified)
@@ -130,7 +155,7 @@ export function useRecipeCalculations(
       0
     );
     const mashWater = totalGrainKg * grainAbsorption;
-    const spargeWater = data.boilSizeL - mashWater;
+    const spargeWater = Math.max(data.boilSizeL - mashWater, 0);
 
     // Calculate water chemistry
     const baseProfile = data.baseWaterProfile ?? DEFAULT_BASE_WATER;
@@ -138,6 +163,7 @@ export function useRecipeCalculations(
       name: wa.name,
       amountG: wa.amountG,
       ionType: wa.ionType as "ca" | "mg" | "na" | "cl" | "so4" | "hco3",
+      volumeL: wa.volumeL ?? data.batchSizeL,
     }));
     const ionProfile = calculateWaterProfile(baseProfile, saltAdditions);
 

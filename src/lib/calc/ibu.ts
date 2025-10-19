@@ -1,112 +1,166 @@
 /**
- * IBU calculations using Tinseth formula
- * Handles boil hops, whirlpool hops, and ignores dry hops
+ * IBU calculations using the Tinseth model.
+ * Handles boil, whirlpool/hop-stand, and dry-hop additions.
  */
 
+import { calculatePreBoilGravity } from "./gravity";
+
+export type HopType = "boil" | "whirlpool" | "dry-hop";
+
 export interface Hop {
-  alphaAcid: number; // Percentage (e.g., 12.5 for 12.5%)
-  amountG: number; // Grams
-  timeMin: number; // Minutes in boil or whirlpool
-  type: "boil" | "whirlpool" | "dry-hop";
+  name?: string;
+  alphaAcid: number; // Percentage (e.g., 12 for 12%)
+  amountG: number; // Weight in grams
+  timeMin: number; // Contact time in minutes
+  type: HopType;
+  temperatureC?: number; // Whirlpool/hop-stand temperature
+}
+
+export interface HopContribution {
+  hop: string;
+  contribution: number;
+  utilization: number;
 }
 
 export interface IBUResult {
   ibu: number;
-  contributions: Array<{
-    hop: string;
-    contribution: number;
-    utilization: number;
-  }>;
+  contributions: HopContribution[];
+  boilGravity: number;
 }
 
-/**
- * Calculate hop utilization based on gravity and time (Tinseth formula)
- * Utilization = 1.65 * 0.000125^(OG - 1) * (1 - e^(-0.04 * time)) / 4.15
- */
-function calculateUtilization(og: number, timeMin: number): number {
-  const gravityFactor = Math.pow(0.000125, og - 1);
-  const timeFactor = (1 - Math.exp(-0.04 * timeMin)) / 4.15;
-  return 1.65 * gravityFactor * timeFactor;
+export interface CalculateIBUArgs {
+  finalVolumeL: number;
+  preBoilVolumeL?: number;
+  og: number;
+  utilizationMultiplier?: number;
+  defaultWhirlpoolTempC?: number;
+  whirlpoolRetention?: number;
 }
 
-/**
- * Calculate whirlpool utilization based on temperature
- * Assumes whirlpool at 80-100°C with reduced utilization
- */
-function calculateWhirlpoolUtilization(
-  og: number,
-  timeMin: number,
-  tempC: number = 85
-): number {
-  const baseUtilization = calculateUtilization(og, timeMin);
-  // Temperature factor: higher temp = higher utilization
-  const tempFactor = Math.max(0.1, Math.min(1.0, (tempC - 60) / 40));
-  return baseUtilization * tempFactor;
+const UTILIZATION_GRAVITY_BASE = 0.000125;
+const UTILIZATION_MULTIPLIER = 1.65;
+const UTILIZATION_TIME_DIVISOR = 4.15;
+const DEFAULT_WHIRLPOOL_TEMP_C = 80;
+const DEFAULT_WHIRLPOOL_RETENTION = 0.75;
+
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(Math.max(value, min), max);
+
+function calculateTinsethUtilization(gravity: number, timeMin: number): number {
+  if (timeMin <= 0) return 0;
+  const gravityFactor = Math.pow(UTILIZATION_GRAVITY_BASE, gravity - 1);
+  const timeFactor =
+    (1 - Math.exp(-0.04 * timeMin)) / UTILIZATION_TIME_DIVISOR;
+  return UTILIZATION_MULTIPLIER * gravityFactor * timeFactor;
 }
 
-/**
- * Calculate IBU contribution from a single hop addition
- */
-function calculateHopContribution(
-  hop: Hop,
-  batchSizeL: number,
-  og: number,
-  utilizationMultiplier: number = 1.0
-): number {
-  if (hop.type === "dry-hop") return 0; // Dry hops don't contribute IBU
+function calculateWhirlpoolUtilization({
+  gravity,
+  timeMin,
+  temperatureC,
+  defaultTemperatureC,
+  retention,
+}: {
+  gravity: number;
+  timeMin: number;
+  temperatureC?: number;
+  defaultTemperatureC: number;
+  retention: number;
+}): number {
+  const baseUtilization = calculateTinsethUtilization(gravity, timeMin);
+  const temp =
+    temperatureC ?? defaultTemperatureC ?? DEFAULT_WHIRLPOOL_TEMP_C;
+  const tempFactor = clamp((temp - 60) / 40, 0, 1);
+  return baseUtilization * tempFactor * retention;
+}
 
-  let utilization: number;
-
-  if (hop.type === "whirlpool") {
-    utilization = calculateWhirlpoolUtilization(og, hop.timeMin);
-  } else {
-    utilization = calculateUtilization(og, hop.timeMin);
+function calculateHopIBU({
+  hop,
+  gravity,
+  finalVolumeL,
+  utilizationMultiplier,
+  defaultWhirlpoolTempC,
+  whirlpoolRetention,
+}: {
+  hop: Hop;
+  gravity: number;
+  finalVolumeL: number;
+  utilizationMultiplier: number;
+  defaultWhirlpoolTempC: number;
+  whirlpoolRetention: number;
+}): { ibu: number; utilization: number } {
+  if (hop.type === "dry-hop" || finalVolumeL <= 0) {
+    return { ibu: 0, utilization: 0 };
   }
 
-  // Apply recipe-level utilization multiplier (e.g., for NEIPA)
-  utilization *= utilizationMultiplier;
+  const baseUtilization =
+    hop.type === "whirlpool"
+      ? calculateWhirlpoolUtilization({
+          gravity,
+          timeMin: hop.timeMin,
+          temperatureC: hop.temperatureC,
+          defaultTemperatureC: defaultWhirlpoolTempC,
+          retention: whirlpoolRetention,
+        })
+      : calculateTinsethUtilization(gravity, hop.timeMin);
 
-  // Tinseth formula: IBU = (AA% * Weight(g) * Utilization * 74.89) / Volume(L)
-  const ibu = (hop.alphaAcid * hop.amountG * utilization * 74.89) / batchSizeL;
+  const utilization = baseUtilization * utilizationMultiplier;
+  const ibu =
+    (hop.alphaAcid / 100) *
+    hop.amountG *
+    utilization *
+    (1000 / finalVolumeL);
 
-  return ibu;
+  return { ibu, utilization };
 }
 
 /**
- * Calculate total IBU for a recipe
+ * Calculate total IBU for a recipe.
  */
 export function calculateIBU(
   hops: Hop[],
-  batchSizeL: number,
-  og: number,
-  utilizationMultiplier: number = 1.0
+  {
+    finalVolumeL,
+    preBoilVolumeL,
+    og,
+    utilizationMultiplier = 1,
+    defaultWhirlpoolTempC = DEFAULT_WHIRLPOOL_TEMP_C,
+    whirlpoolRetention = DEFAULT_WHIRLPOOL_RETENTION,
+  }: CalculateIBUArgs
 ): IBUResult {
-  const contributions = hops.map((hop, index) => {
-    const contribution = calculateHopContribution(
-      hop,
-      batchSizeL,
-      og,
-      utilizationMultiplier
-    );
-    let utilization: number;
+  const effectivePreBoilVolumeL = preBoilVolumeL ?? finalVolumeL;
 
-    if (hop.type === "whirlpool") {
-      utilization = calculateWhirlpoolUtilization(og, hop.timeMin);
-    } else {
-      utilization = calculateUtilization(og, hop.timeMin);
-    }
+  const boilGravity = calculatePreBoilGravity(
+    og,
+    finalVolumeL,
+    effectivePreBoilVolumeL
+  );
+
+  const contributions = hops.map((hop, index) => {
+    const { ibu, utilization } = calculateHopIBU({
+      hop,
+      gravity: hop.type === "dry-hop" ? 1 : boilGravity,
+      finalVolumeL,
+      utilizationMultiplier,
+      defaultWhirlpoolTempC,
+      whirlpoolRetention,
+    });
 
     return {
-      hop: `Hop ${index + 1}`,
-      contribution,
-      utilization: utilization * utilizationMultiplier,
+      hop: hop.name ?? `Hop ${index + 1}`,
+      contribution: Math.max(0, ibu),
+      utilization,
     };
   });
 
-  const totalIBU = contributions.reduce((sum, c) => sum + c.contribution, 0);
+  const totalIBU = contributions.reduce(
+    (sum, contribution) => sum + contribution.contribution,
+    0
+  );
 
   return {
-    ibu: Math.round(totalIBU * 10) / 10, // Round to 1 decimal
+    ibu: Math.round(totalIBU * 10) / 10,
     contributions,
+    boilGravity,
   };
 }

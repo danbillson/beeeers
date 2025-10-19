@@ -58,8 +58,10 @@ type FermentableOption = {
   id: string;
   name: string;
   origin: string;
-  ppg: number;
-  colorLovibond: number;
+  potential: number;
+  potentialUnit?: "PPG" | "PKL";
+  color: number;
+  colorUnit?: "L" | "SRM" | "EBC";
   description: string;
 };
 
@@ -77,8 +79,10 @@ type FermentableEntry = {
   name: string;
   origin: string;
   amountKg: number;
-  ppg: number;
-  colorLovibond: number;
+  potential: number;
+  potentialUnit?: "PPG" | "PKL";
+  color: number;
+  colorUnit?: "L" | "SRM" | "EBC";
 };
 
 type HopEntry = {
@@ -123,6 +127,7 @@ type WaterAdditionEntry = {
   optionId: string;
   name: string;
   amountG: number;
+  volumeL?: number;
 };
 
 const FERMENTABLE_OPTIONS: FermentableOption[] = [
@@ -130,80 +135,80 @@ const FERMENTABLE_OPTIONS: FermentableOption[] = [
     id: "pale-2-row",
     name: "Pale 2-Row",
     origin: "US",
-    ppg: 3.0,
-    colorLovibond: 2,
+    potential: 36,
+    color: 2,
     description: "Base malt for most beer styles",
   },
   {
     id: "pilsner",
     name: "Pilsner",
     origin: "Germany",
-    ppg: 3.1,
-    colorLovibond: 1.5,
+    potential: 37,
+    color: 1.5,
     description: "Light base malt for lagers and pilsners",
   },
   {
     id: "munich",
     name: "Munich",
     origin: "Germany",
-    ppg: 2.9,
-    colorLovibond: 9,
+    potential: 35,
+    color: 9,
     description: "Malt with rich, toasty flavor",
   },
   {
     id: "crystal-60",
     name: "Crystal 60",
     origin: "UK",
-    ppg: 2.7,
-    colorLovibond: 60,
+    potential: 33,
+    color: 60,
     description: "Caramel malt for sweetness and color",
   },
   {
     id: "wheat-malt",
     name: "Wheat Malt",
     origin: "Germany",
-    ppg: 3.0,
-    colorLovibond: 2,
+    potential: 38,
+    color: 2,
     description: "Wheat malt for head retention and body",
   },
   {
     id: "vienna",
     name: "Vienna",
     origin: "Austria",
-    ppg: 3.0,
-    colorLovibond: 4,
+    potential: 35,
+    color: 4,
     description: "Light amber malt with toasty notes",
   },
   {
     id: "carapils",
     name: "CaraPils",
     origin: "Germany",
-    ppg: 2.8,
-    colorLovibond: 2,
+    potential: 33,
+    color: 2,
     description: "Dextrin malt for body and head retention",
   },
   {
     id: "chocolate",
     name: "Chocolate",
     origin: "UK",
-    ppg: 2.4,
-    colorLovibond: 350,
+    potential: 28,
+    color: 350,
     description: "Dark roasted malt for chocolate flavor",
   },
   {
     id: "roasted-barley",
     name: "Roasted Barley",
     origin: "UK",
-    ppg: 2.3,
-    colorLovibond: 500,
+    potential: 25,
+    color: 500,
     description: "Very dark malt for stout character",
   },
   {
     id: "flaked-oats",
     name: "Oats (Flaked)",
     origin: "US",
-    ppg: 2.8,
-    colorLovibond: 1,
+    potential: 33,
+    color: 1,
     description: "Unmalted oats for smooth mouthfeel",
   },
 ];
@@ -305,18 +310,18 @@ const DEFAULT_WATER_PROFILE_ID = WATER_PROFILE_OPTIONS[0].id;
 
 const SALT_OPTIONS: SaltOption[] = [
   {
-    id: "Gypsum (CaSO4)",
-    name: "Gypsum (CaSO4)",
+    id: "Gypsum (CaSO4·2H2O)",
+    name: "Gypsum (CaSO4·2H2O)",
     description: "Adds calcium and sulfate for crisper bitterness",
   },
   {
-    id: "Calcium Chloride (CaCl2)",
-    name: "Calcium Chloride (CaCl2)",
+    id: "Calcium Chloride (CaCl2·2H2O)",
+    name: "Calcium Chloride (CaCl2·2H2O)",
     description: "Boosts calcium and chloride for malt roundness",
   },
   {
-    id: "Epsom Salt (MgSO4)",
-    name: "Epsom Salt (MgSO4)",
+    id: "Epsom Salt (MgSO4·7H2O)",
+    name: "Epsom Salt (MgSO4·7H2O)",
     description: "Raises magnesium and sulfate for hop expression",
   },
   {
@@ -399,6 +404,7 @@ export default function NewRecipePage() {
         name: addition.name,
         amountG: addition.amountG,
         ionType: ion as SaltAddition["ionType"],
+        volumeL: addition.volumeL ?? formState.batchSizeL,
       }));
     }
   );
@@ -406,8 +412,10 @@ export default function NewRecipePage() {
   const stats = useRecipeCalculations({
     fermentables: fermentables.map((fermentable) => ({
       ingredient: {
-        ppg: fermentable.ppg,
-        colorLovibond: fermentable.colorLovibond,
+        potential: fermentable.potential,
+        potentialUnit: fermentable.potentialUnit ?? "PPG",
+        color: fermentable.color,
+        colorUnit: fermentable.colorUnit ?? "L",
       },
       amountKg: fermentable.amountKg,
     })),
@@ -416,6 +424,7 @@ export default function NewRecipePage() {
       amountG: hop.amountG,
       timeMin: hop.timeMin,
       type: hop.type,
+      name: hop.name,
     })),
     yeast: emptyRecipe.yeast,
     waterAdditions: waterAdditionsForCalc,
@@ -448,8 +457,10 @@ export default function NewRecipePage() {
         name: option.name,
         origin: option.origin,
         amountKg: 1,
-        ppg: option.ppg,
-        colorLovibond: option.colorLovibond,
+        potential: option.potential,
+        potentialUnit: option.potentialUnit,
+        color: option.color,
+        colorUnit: option.colorUnit,
       },
     ]);
   }
@@ -468,8 +479,10 @@ export default function NewRecipePage() {
               optionId,
               name: option.name,
               origin: option.origin,
-              ppg: option.ppg,
-              colorLovibond: option.colorLovibond,
+              potential: option.potential,
+              potentialUnit: option.potentialUnit,
+              color: option.color,
+              colorUnit: option.colorUnit,
             }
           : fermentable
       )
@@ -575,6 +588,7 @@ export default function NewRecipePage() {
         optionId: option.id,
         name: option.name,
         amountG: 1,
+        volumeL: formState.batchSizeL,
       },
     ]);
   }
@@ -825,7 +839,7 @@ export default function NewRecipePage() {
                                     {option.name}
                                   </div>
                                   <div className="text-xs text-muted-foreground">
-                                    {option.origin} • {option.colorLovibond}°L
+                                  {option.origin} • {option.color}°L
                                   </div>
                                 </div>
                               </SelectItem>

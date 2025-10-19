@@ -11,9 +11,9 @@ export * from "./priming";
 export * from "./water";
 
 // Re-export types for convenience
-export type { Fermentable, GravityResult } from "./gravity";
-export type { Hop, IBUResult } from "./ibu";
-export type { FermentableColor } from "./color";
-export type { ABVResult } from "./abv";
-export type { PrimingResult } from "./priming";
+export type { Fermentable, GravityResult, YieldUnit } from "./gravity";
+export type { Hop, IBUResult, CalculateIBUArgs, HopType } from "./ibu";
+export type { FermentableColor, ColorUnit } from "./color";
+export type { ABVResult, ABVFormula } from "./abv";
+export type { PrimingResult, PrimingSugarType } from "./priming";
 export type { IonProfile, SaltAddition } from "./water";
