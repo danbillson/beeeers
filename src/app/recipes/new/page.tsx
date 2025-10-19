@@ -1095,17 +1095,15 @@ export default function NewRecipePage() {
                   onValueChange={handleWaterProfileChange}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select water profile" />
+                    <SelectValue
+                      placeholder="Select water profile"
+                      className="[&_.text-xs]:hidden"
+                    />
                   </SelectTrigger>
                   <SelectContent align="start">
                     {WATER_PROFILE_OPTIONS.map((option) => (
                       <SelectItem key={option.id} value={option.id}>
-                        <div className="flex flex-col items-start">
-                          <span>{option.name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {option.description}
-                          </span>
-                        </div>
+                        <span>{option.name}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1156,12 +1154,7 @@ export default function NewRecipePage() {
                             <SelectContent align="start">
                               {SALT_OPTIONS.map((option) => (
                                 <SelectItem key={option.id} value={option.id}>
-                                  <div className="flex flex-col items-start">
-                                    <span>{option.name}</span>
-                                    <span className="text-xs text-muted-foreground">
-                                      {option.description}
-                                    </span>
-                                  </div>
+                                  <span>{option.name}</span>
                                 </SelectItem>
                               ))}
                             </SelectContent>
