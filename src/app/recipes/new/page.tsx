@@ -5,7 +5,6 @@
  * Create a new brewing recipe
  */
 
-import { useState } from "react";
 import { nanoid } from "nanoid";
 import { Save, Wheat, Beer, Thermometer, Plus, Trash2 } from "lucide-react";
 import { RecipeStatsBar } from "@/components/RecipeStatsBar";
@@ -42,8 +41,12 @@ import {
   InputGroupInput,
   InputGroupText,
 } from "@/components/ui/input-group";
-
-type RecipeMethod = "all-grain" | "extract" | "partial";
+import {
+  useNewRecipeStore,
+  type HopEntry,
+  type MashStepEntry,
+  type RecipeMethod,
+} from "@/hooks/use-new-recipe-store";
 
 type FermentableOption = {
   id: string;
@@ -64,42 +67,6 @@ type HopOption = {
   description: string;
 };
 
-type FermentableEntry = {
-  id: string;
-  optionId: string;
-  name: string;
-  origin: string;
-  amountKg: number;
-  potential: number;
-  potentialUnit?: "PPG" | "PKL";
-  color: number;
-  colorUnit?: "L" | "SRM" | "EBC";
-};
-
-type HopEntry = {
-  id: string;
-  optionId: string;
-  name: string;
-  origin: string;
-  amountG: number;
-  timeMin: number;
-  type: "boil" | "whirlpool" | "dry-hop";
-  alphaAcid: number;
-};
-
-type RecipeFormState = {
-  name: string;
-  style: string;
-  method: RecipeMethod;
-  batchSizeL: number;
-  boilSizeL: number;
-  efficiency: number;
-  boilTimeMin: number;
-  hopUtilizationMultiplier: number;
-  fermentationTempC: number;
-  notes: string;
-};
-
 type WaterProfileOption = {
   id: string;
   name: string;
@@ -111,21 +78,6 @@ type SaltOption = {
   id: string;
   name: string;
   description: string;
-};
-
-type WaterAdditionEntry = {
-  id: string;
-  optionId: string;
-  name: string;
-  amountG: number;
-  volumeL?: number;
-};
-
-type MashStepEntry = {
-  id: string;
-  stepType: "strike" | "sparge";
-  temperatureC: number;
-  timeMin: number;
 };
 
 const FERMENTABLE_OPTIONS: FermentableOption[] = [
@@ -304,8 +256,6 @@ const WATER_PROFILE_OPTIONS: WaterProfileOption[] = [
   },
 ];
 
-const DEFAULT_WATER_PROFILE_ID = WATER_PROFILE_OPTIONS[0].id;
-
 const SALT_OPTIONS: SaltOption[] = [
   {
     id: "Gypsum (CaSO4·2H2O)",
@@ -366,27 +316,23 @@ const emptyRecipe = {
 };
 
 export default function NewRecipePage() {
-  const [formState, setFormState] = useState<RecipeFormState>({
-    name: "",
-    style: "",
-    method: "all-grain",
-    batchSizeL: 10,
-    boilSizeL: 12,
-    efficiency: 75,
-    boilTimeMin: 60,
-    hopUtilizationMultiplier: 1.0,
-    fermentationTempC: 20,
-    notes: "",
-  });
-  const [fermentables, setFermentables] = useState<FermentableEntry[]>([]);
-  const [hops, setHops] = useState<HopEntry[]>([]);
-  const [waterProfileId, setWaterProfileId] = useState(
-    DEFAULT_WATER_PROFILE_ID
+  const formState = useNewRecipeStore((state) => state.formState);
+  const setFormState = useNewRecipeStore((state) => state.setFormState);
+  const fermentables = useNewRecipeStore((state) => state.fermentables);
+  const setFermentables = useNewRecipeStore((state) => state.setFermentables);
+  const hops = useNewRecipeStore((state) => state.hops);
+  const setHops = useNewRecipeStore((state) => state.setHops);
+  const waterProfileId = useNewRecipeStore((state) => state.waterProfileId);
+  const setWaterProfileId = useNewRecipeStore(
+    (state) => state.setWaterProfileId
   );
-  const [waterAdditions, setWaterAdditions] = useState<WaterAdditionEntry[]>(
-    []
+  const waterAdditions = useNewRecipeStore((state) => state.waterAdditions);
+  const setWaterAdditions = useNewRecipeStore(
+    (state) => state.setWaterAdditions
   );
-  const [mashSteps, setMashSteps] = useState<MashStepEntry[]>([]);
+  const mashSteps = useNewRecipeStore((state) => state.mashSteps);
+  const setMashSteps = useNewRecipeStore((state) => state.setMashSteps);
+  const addMashStep = useNewRecipeStore((state) => state.addMashStep);
 
   const selectedWaterProfile =
     WATER_PROFILE_OPTIONS.find((option) => option.id === waterProfileId) ??
@@ -443,20 +389,7 @@ export default function NewRecipePage() {
   const waterProfileCharacter = getWaterProfileDescription(stats.ionProfile);
 
   function handleAddMashStep() {
-    setMashSteps((previous) => [
-      ...previous,
-      {
-        id: nanoid(),
-        stepType:
-          previous.length > 0
-            ? previous[previous.length - 1].stepType
-            : "strike",
-        temperatureC:
-          previous.length > 0 ? previous[previous.length - 1].temperatureC : 66,
-        timeMin:
-          previous.length > 0 ? previous[previous.length - 1].timeMin : 60,
-      },
-    ]);
+    addMashStep();
   }
 
   function handleMashStepType(id: string, stepType: MashStepEntry["stepType"]) {
