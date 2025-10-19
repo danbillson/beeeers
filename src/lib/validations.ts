@@ -103,21 +103,6 @@ export const recipeSchema = z.object({
   updatedAt: z.date(),
 });
 
-// Brew log schema
-export const brewLogSchema = z.object({
-  id: z.string(),
-  recipeId: z.string(),
-  brewDate: z.date(),
-  measuredOG: z.number().min(1).optional(),
-  measuredFG: z.number().min(1).optional(),
-  fermentationTempC: z.number().min(0).max(50).optional(),
-  notes: z.string().optional(),
-  issues: z.string().optional(), // JSON string of issue tags
-  tastingNotes: z.string().optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-});
-
 // Create recipe input schema (for forms)
 export const createRecipeInputSchema = z.object({
   name: z.string().min(1, "Recipe name is required"),
@@ -131,18 +116,6 @@ export const createRecipeInputSchema = z.object({
   notes: z.string().optional(),
 });
 
-// Create brew log input schema
-export const createBrewLogInputSchema = z.object({
-  recipeId: z.string(),
-  brewDate: z.date(),
-  measuredOG: z.number().min(1).optional(),
-  measuredFG: z.number().min(1).optional(),
-  fermentationTempC: z.number().min(0).max(50).optional(),
-  notes: z.string().optional(),
-  issues: z.array(z.string()).optional(),
-  tastingNotes: z.string().optional(),
-});
-
 // Export TypeScript types
 export type Ingredient = z.infer<typeof ingredientSchema>;
 export type RecipeFermentable = z.infer<typeof recipeFermentableSchema>;
@@ -152,7 +125,5 @@ export type WaterAddition = z.infer<typeof waterAdditionSchema>;
 export type OtherAddition = z.infer<typeof otherAdditionSchema>;
 export type MashStep = z.infer<typeof mashStepSchema>;
 export type Recipe = z.infer<typeof recipeSchema>;
-export type BrewLog = z.infer<typeof brewLogSchema>;
 
 export type CreateRecipeInput = z.infer<typeof createRecipeInputSchema>;
-export type CreateBrewLogInput = z.infer<typeof createBrewLogInputSchema>;

@@ -82,7 +82,6 @@ The app implements industry-standard brewing calculations:
 src/
 ├── app/                    # Next.js app router pages
 │   ├── recipes/           # Recipe management pages
-│   ├── logs/              # Brew log pages
 │   └── api/               # API routes
 ├── components/            # React components
 │   ├── ui/               # shadcn/ui components

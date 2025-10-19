@@ -192,20 +192,3 @@ export const mashSteps = pgTable("mash_steps", {
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 });
-
-// Brew logs
-export const brewLogs = pgTable("brew_logs", {
-  id: text("id").primaryKey(),
-  recipeId: text("recipe_id")
-    .notNull()
-    .references(() => recipes.id, { onDelete: "cascade" }),
-  brewDate: timestamp("brew_date").notNull(),
-  measuredOG: real("measured_og"),
-  measuredFG: real("measured_fg"),
-  fermentationTempC: real("fermentation_temp_c"),
-  notes: text("notes"),
-  issues: text("issues"), // JSON array of issue tags
-  tastingNotes: text("tasting_notes"),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
-});

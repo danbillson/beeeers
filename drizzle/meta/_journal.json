@@ -15,6 +15,13 @@
       "when": 1760118811354,
       "tag": "0001_tricky_the_renegades",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1760889873278,
+      "tag": "0002_bizarre_robin_chapel",
+      "breakpoints": true
     }
   ]
 }

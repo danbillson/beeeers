@@ -106,7 +106,6 @@ CREATE TABLE "recipes" (
 	"updated_at" timestamp NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "brew_logs" ADD CONSTRAINT "brew_logs_recipe_id_recipes_id_fk" FOREIGN KEY ("recipe_id") REFERENCES "public"."recipes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "mash_steps" ADD CONSTRAINT "mash_steps_recipe_id_recipes_id_fk" FOREIGN KEY ("recipe_id") REFERENCES "public"."recipes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "recipe_fermentables" ADD CONSTRAINT "recipe_fermentables_recipe_id_recipes_id_fk" FOREIGN KEY ("recipe_id") REFERENCES "public"."recipes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "recipe_fermentables" ADD CONSTRAINT "recipe_fermentables_ingredient_id_ingredients_id_fk" FOREIGN KEY ("ingredient_id") REFERENCES "public"."ingredients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -116,4 +115,5 @@ ALTER TABLE "recipe_other_additions" ADD CONSTRAINT "recipe_other_additions_reci
 ALTER TABLE "recipe_water_additions" ADD CONSTRAINT "recipe_water_additions_recipe_id_recipes_id_fk" FOREIGN KEY ("recipe_id") REFERENCES "public"."recipes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "recipe_yeast" ADD CONSTRAINT "recipe_yeast_recipe_id_recipes_id_fk" FOREIGN KEY ("recipe_id") REFERENCES "public"."recipes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "recipe_yeast" ADD CONSTRAINT "recipe_yeast_ingredient_id_ingredients_id_fk" FOREIGN KEY ("ingredient_id") REFERENCES "public"."ingredients"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "brew_logs" ADD CONSTRAINT "brew_logs_recipe_id_recipes_id_fk" FOREIGN KEY ("recipe_id") REFERENCES "public"."recipes"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "recipes" ADD CONSTRAINT "recipes_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;
