@@ -3,7 +3,7 @@
  * Two-column layout with auto-calculating stats
  */
 
-import { RecipeStatsBar } from "@/components/RecipeStatsBar";
+import { RecipeStatsBar } from "@/components/recipe-stats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
