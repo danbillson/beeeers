@@ -29,13 +29,13 @@ type TemplateDialogProps = {
   onStartFromScratch: () => void;
 };
 
-const FAMILY_LABELS: Record<BeerStyleTemplate["styleFamily"], string> = {
+const FAMILY_LABELS = {
   ale: "Ale",
   lager: "Lager",
   stout: "Stout",
-  "mixed-fermentation": "Mixed Fermentation",
+  "mixed-fermentation": "Mixed Ferm",
   other: "Specialty & Other",
-};
+} satisfies Record<BeerStyleTemplate["styleFamily"], string>;
 
 const templateList = Object.values(beerStyleTemplates).sort((a, b) =>
   a.name.localeCompare(b.name)
@@ -48,7 +48,7 @@ export function TemplateDialog({
   onStartFromScratch,
 }: TemplateDialogProps) {
   const familyOptions = useMemo(() => {
-    const ORDER: Record<BeerStyleTemplate["styleFamily"], number> = {
+    const ORDER = {
       ale: 0,
       lager: 1,
       stout: 2,
@@ -96,7 +96,6 @@ export function TemplateDialog({
         template.description,
         template.bjcp?.category,
         template.bjcp?.code,
-        ...(template.aliases ?? []),
         template.sensoryProfile.aroma,
         template.sensoryProfile.flavor,
         template.sensoryProfile.mouthfeel,
@@ -114,13 +113,22 @@ export function TemplateDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="overflow-hidden p-0 max-w-[min(800px,calc(100%-2rem))] sm:max-w-[800px]">
+      <DialogContent
+        showCloseButton={false}
+        className="overflow-hidden p-0 max-w-[min(800px,calc(100%-2rem))] sm:max-w-[800px]"
+      >
         <div className="flex h-[680px] flex-col">
           <DialogHeader className="border-b px-6 py-3">
             <div className="flex items-center justify-between gap-4">
-              <DialogTitle className="text-lg font-semibold">Templates</DialogTitle>
+              <DialogTitle className="text-lg font-semibold">
+                Templates
+              </DialogTitle>
               <DialogClose asChild>
-                <Button variant="ghost" size="icon" aria-label="Close templates">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Close templates"
+                >
                   <XIcon className="size-4" />
                 </Button>
               </DialogClose>
@@ -166,7 +174,9 @@ export function TemplateDialog({
                           }}
                           aria-label={label}
                         />
-                        <span className="select-none text-foreground">{label}</span>
+                        <span className="select-none text-foreground">
+                          {label}
+                        </span>
                       </label>
                     );
                   })}
@@ -207,35 +217,17 @@ export function TemplateDialog({
                         )}
                       </div>
                       <Badge variant="secondary" className="shrink-0 text-xs">
-                        {template.styleFamily === "ale"
-                          ? "Ale"
-                          : template.styleFamily === "lager"
-                          ? "Lager"
-                          : template.styleFamily === "stout"
-                          ? "Stout"
-                          : template.styleFamily === "mixed-fermentation"
-                          ? "Mixed"
-                          : "Other"}
+                        {
+                          FAMILY_LABELS[
+                            template.styleFamily as keyof typeof FAMILY_LABELS
+                          ]
+                        }
                       </Badge>
                     </div>
 
                     <p className="line-clamp-2 text-sm text-muted-foreground">
                       {template.description}
                     </p>
-
-                    {template.aliases && template.aliases.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {template.aliases.slice(0, 3).map((alias) => (
-                          <Badge
-                            key={alias}
-                            variant="outline"
-                            className="text-xs font-normal"
-                          >
-                            {alias}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
                   </button>
                 ))}
               </div>

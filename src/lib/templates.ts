@@ -16,7 +16,6 @@ export type Range = { min: number; max: number; unit: string };
 export type BeerStyleTemplate = {
   id: string;
   name: string;
-  aliases?: string[];
   styleFamily: "ale" | "lager" | "stout" | "mixed-fermentation" | "other";
   bjcp?: {
     category: string;
