@@ -14,11 +14,18 @@ import {
   Plus,
   Trash2,
   Loader2,
+  Sparkles,
 } from "lucide-react";
-import { useEffect, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RecipeStatsBar } from "@/components/recipe-stats";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardAction,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -61,6 +68,8 @@ import { createRecipe } from "@/app/recipes/actions";
 import { CreateRecipeActionInput } from "@/app/recipes/actions.shared";
 import { useSession } from "@/lib/auth-client";
 import { toast } from "sonner";
+import { type BeerStyleTemplate } from "@/lib/templates";
+import { TemplateDialog } from "./template-dialog";
 
 type FermentableOption = {
   id: string;
@@ -93,6 +102,149 @@ type SaltOption = {
   name: string;
   description: string;
 };
+
+function getSuggestedBoilSize(
+  targetBatchSize: number,
+  fallbackBoilSize: number
+) {
+  if (!targetBatchSize || targetBatchSize <= 0) {
+    return fallbackBoilSize;
+  }
+
+  const buffer = Math.max(targetBatchSize * 0.15, 1.5);
+  return Math.max(
+    Math.round((targetBatchSize + buffer) * 10) / 10,
+    targetBatchSize
+  );
+}
+
+const DEFAULT_MASH_TEMPERATURE = 66;
+const DEFAULT_MASH_DURATION = 60;
+
+function inferMashStepType(title: string): MashStepEntry["stepType"] {
+  const normalized = title.toLowerCase();
+
+  if (normalized.includes("mash out") || normalized.includes("mash-out")) {
+    return "mashout";
+  }
+
+  if (normalized.includes("sparge")) {
+    return "sparge";
+  }
+
+  return "strike";
+}
+
+function parseProcessTarget(target?: string) {
+  const normalized = target?.replace(/–/g, "-") ?? "";
+  const temperatureMatch = normalized.match(
+    /(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?\s*°C/i
+  );
+
+  let temperature: number | undefined;
+  if (temperatureMatch) {
+    const first = Number.parseFloat(temperatureMatch[1] ?? "0");
+    const second = temperatureMatch[2]
+      ? Number.parseFloat(temperatureMatch[2] ?? "0")
+      : undefined;
+    const average = Number.isFinite(second)
+      ? (first + (second ?? 0)) / (second ? 2 : 1)
+      : first;
+    temperature = Math.round(average * 10) / 10;
+  }
+
+  const timeMatch = normalized.match(
+    /(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?\s*(?:min|minutes)/i
+  );
+
+  let timeMin: number | undefined;
+  if (timeMatch) {
+    const first = Number.parseFloat(timeMatch[1] ?? "0");
+    const second = timeMatch[2]
+      ? Number.parseFloat(timeMatch[2] ?? "0")
+      : undefined;
+    const average = Number.isFinite(second)
+      ? (first + (second ?? 0)) / (second ? 2 : 1)
+      : first;
+    timeMin = Math.round(average);
+  }
+
+  return { temperature, timeMin };
+}
+
+function buildMashStepsFromTemplate(template: BeerStyleTemplate) {
+  const steps = template.recommendedRecipe.mashProfile.map((step) => {
+    const { temperature, timeMin } = parseProcessTarget(step.target);
+
+    return {
+      id: nanoid(),
+      stepType: inferMashStepType(step.title),
+      temperatureC:
+        Math.round((temperature ?? DEFAULT_MASH_TEMPERATURE) * 10) / 10,
+      timeMin: timeMin ?? DEFAULT_MASH_DURATION,
+    } satisfies MashStepEntry;
+  });
+
+  if (steps.length > 0) {
+    return steps;
+  }
+
+  return [
+    {
+      id: nanoid(),
+      stepType: "strike" as const,
+      temperatureC: DEFAULT_MASH_TEMPERATURE,
+      timeMin: DEFAULT_MASH_DURATION,
+    },
+  ];
+}
+
+function estimateFermentationTemperature(template: BeerStyleTemplate) {
+  for (const step of template.recommendedRecipe.fermentationProfile) {
+    const { temperature } = parseProcessTarget(step.target);
+    if (typeof temperature === "number" && !Number.isNaN(temperature)) {
+      return Math.round(temperature);
+    }
+  }
+
+  return undefined;
+}
+
+function composeTemplateNotes(template: BeerStyleTemplate) {
+  const sections: string[] = [];
+
+  if (template.description) {
+    sections.push(template.description.trim());
+  }
+
+  if (template.processGuidance?.tips?.length) {
+    sections.push(
+      ["Tips:", ...template.processGuidance.tips.map((tip) => `• ${tip}`)].join(
+        "\n"
+      )
+    );
+  }
+
+  if (template.processGuidance?.pitfalls?.length) {
+    sections.push(
+      [
+        "Watch outs:",
+        ...template.processGuidance.pitfalls.map((item) => `• ${item}`),
+      ].join("\n")
+    );
+  }
+
+  if (template.processGuidance?.variations?.length) {
+    sections.push(
+      [
+        "Variations:",
+        ...template.processGuidance.variations.map((item) => `• ${item}`),
+      ].join("\n")
+    );
+  }
+
+  return sections.join("\n\n");
+}
 
 const FERMENTABLE_OPTIONS: FermentableOption[] = [
   {
@@ -352,12 +504,20 @@ export default function NewRecipePage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const { data: sessionData, isPending: isSessionPending } = useSession();
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!isSessionPending && !sessionData) {
       router.replace("/login");
     }
   }, [isSessionPending, sessionData, router]);
+
+  // Auto-open template dialog on first load if form is empty
+  useEffect(() => {
+    if (!formState.name && !isTemplateDialogOpen && sessionData) {
+      setIsTemplateDialogOpen(true);
+    }
+  }, [formState.name, isTemplateDialogOpen, sessionData]);
 
   function handleSave() {
     const userId = sessionData?.user?.id;
@@ -426,6 +586,108 @@ export default function NewRecipePage() {
       toast.success("Recipe saved successfully");
       router.push(`/recipes/${result.recipeId}`);
     });
+  }
+
+  function handleSelectTemplate(template: BeerStyleTemplate) {
+    // Update form state
+    setFormState((previous) => ({
+      ...previous,
+      name: template.name,
+      style: template.name,
+      method: template.recommendedRecipe.method,
+      batchSizeL: template.recommendedRecipe.defaultBatchSizeL,
+      boilSizeL: getSuggestedBoilSize(
+        template.recommendedRecipe.defaultBatchSizeL,
+        previous.boilSizeL
+      ),
+      efficiency:
+        template.recommendedRecipe.efficiencyPct ?? previous.efficiency,
+      boilTimeMin:
+        template.recommendedRecipe.boilTimeMin ?? previous.boilTimeMin,
+      hopUtilizationMultiplier:
+        template.recommendedRecipe.hopUtilizationMultiplier ??
+        previous.hopUtilizationMultiplier,
+      fermentationTempC:
+        estimateFermentationTemperature(template) ?? previous.fermentationTempC,
+      notes: composeTemplateNotes(template),
+    }));
+
+    // Map template fermentables to form fermentables
+    const newFermentables = template.keyIngredients.baseMalts
+      .concat(template.keyIngredients.specialtyMalts ?? [])
+      .concat(template.keyIngredients.adjuncts ?? [])
+      .map((ingredient) => {
+        const option = FERMENTABLE_OPTIONS.find(
+          (opt) =>
+            opt.name.toLowerCase() === ingredient.name.toLowerCase() ||
+            opt.name.toLowerCase().includes(ingredient.name.toLowerCase()) ||
+            ingredient.name.toLowerCase().includes(opt.name.toLowerCase())
+        );
+
+        return {
+          id: nanoid(),
+          optionId: option?.id ?? nanoid(),
+          name: ingredient.name,
+          origin: option?.origin ?? "Unknown",
+          amountKg: 0.5,
+          potential: option?.potential ?? 35,
+          potentialUnit: option?.potentialUnit,
+          color: option?.color ?? 5,
+          colorUnit: option?.colorUnit,
+        };
+      });
+    setFermentables(() => newFermentables);
+
+    // Map template hops to form hops
+    const newHops = template.keyIngredients.hops.map((ingredient) => {
+      const option = HOP_OPTIONS.find(
+        (opt) =>
+          opt.name.toLowerCase() === ingredient.name.toLowerCase() ||
+          opt.name.toLowerCase().includes(ingredient.name.toLowerCase()) ||
+          ingredient.name.toLowerCase().includes(opt.name.toLowerCase())
+      );
+
+      return {
+        id: nanoid(),
+        optionId: option?.id ?? nanoid(),
+        name: ingredient.name,
+        origin: option?.origin ?? "Unknown",
+        amountG: 25,
+        timeMin: ingredient.usage?.toLowerCase().includes("dry") ? 0 : 60,
+        type: (ingredient.usage?.toLowerCase().includes("dry")
+          ? "dry-hop"
+          : ingredient.usage?.toLowerCase().includes("whirlpool")
+          ? "whirlpool"
+          : "boil") as HopEntry["type"],
+        alphaAcid: option?.alphaAcid ?? 10,
+      };
+    });
+    setHops(() => newHops);
+
+    // Set water profile if available
+    if (template.waterProfile?.baseProfileId) {
+      const profileOption = WATER_PROFILE_OPTIONS.find(
+        (opt) => opt.id === template.waterProfile?.baseProfileId
+      );
+      if (profileOption) {
+        setWaterProfileId(profileOption.id);
+      }
+    }
+
+    // Clear water additions
+    setWaterAdditions(() => []);
+
+    // Set mash steps
+    const newMashSteps = buildMashStepsFromTemplate(template);
+    setMashSteps(() => newMashSteps);
+
+    // Close dialog
+    setIsTemplateDialogOpen(false);
+    toast.success(`Applied ${template.name} template`);
+  }
+
+  function handleStartFromScratch() {
+    setIsTemplateDialogOpen(false);
   }
 
   const selectedWaterProfile =
@@ -745,6 +1007,16 @@ export default function NewRecipePage() {
           <Card>
             <CardHeader>
               <CardTitle>Recipe Info</CardTitle>
+              <CardAction>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsTemplateDialogOpen(true)}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Choose Template
+                </Button>
+              </CardAction>
             </CardHeader>
             <CardContent className="space-y-4">
               <Field>
@@ -1432,6 +1704,13 @@ export default function NewRecipePage() {
           </Card>
         </div>
       </div>
+
+      <TemplateDialog
+        open={isTemplateDialogOpen}
+        onOpenChange={setIsTemplateDialogOpen}
+        onSelectTemplate={handleSelectTemplate}
+        onStartFromScratch={handleStartFromScratch}
+      />
     </div>
   );
 }
