@@ -3,9 +3,9 @@
  * Populates the database with common fermentables, hops, and yeast
  */
 
-import { db } from "./index";
-import { ingredients } from "./schema";
-import { nanoid } from "nanoid";
+import { nanoid } from "nanoid"
+import { db } from "./index"
+import { ingredients } from "./schema"
 
 const ingredientSeedData = [
   // Fermentables
@@ -204,10 +204,10 @@ const ingredientSeedData = [
     attenuationMax: 79,
     description: "German lager yeast, clean and crisp",
   },
-];
+]
 
 async function seedIngredients() {
-  console.log("🌱 Seeding ingredients...");
+  console.log("🌱 Seeding ingredients...")
 
   try {
     // Insert all ingredients
@@ -216,25 +216,25 @@ async function seedIngredients() {
       ...ingredient,
       createdAt: new Date(),
       updatedAt: new Date(),
-    }));
+    }))
 
-    await db.insert(ingredients).values(ingredientData);
+    await db.insert(ingredients).values(ingredientData)
 
-    console.log(`✅ Successfully seeded ${ingredientData.length} ingredients`);
+    console.log(`✅ Successfully seeded ${ingredientData.length} ingredients`)
 
     // Log summary
     const fermentables = ingredientData.filter(
-      (i) => i.kind === "fermentable"
-    ).length;
-    const hops = ingredientData.filter((i) => i.kind === "hop").length;
-    const yeast = ingredientData.filter((i) => i.kind === "yeast").length;
+      (i) => i.kind === "fermentable",
+    ).length
+    const hops = ingredientData.filter((i) => i.kind === "hop").length
+    const yeast = ingredientData.filter((i) => i.kind === "yeast").length
 
-    console.log(`   - ${fermentables} fermentables`);
-    console.log(`   - ${hops} hops`);
-    console.log(`   - ${yeast} yeast strains`);
+    console.log(`   - ${fermentables} fermentables`)
+    console.log(`   - ${hops} hops`)
+    console.log(`   - ${yeast} yeast strains`)
   } catch (error) {
-    console.error("❌ Error seeding ingredients:", error);
-    throw error;
+    console.error("❌ Error seeding ingredients:", error)
+    throw error
   }
 }
 
@@ -242,13 +242,13 @@ async function seedIngredients() {
 if (require.main === module) {
   seedIngredients()
     .then(() => {
-      console.log("🎉 Seeding completed successfully!");
-      process.exit(0);
+      console.log("🎉 Seeding completed successfully!")
+      process.exit(0)
     })
     .catch((error) => {
-      console.error("💥 Seeding failed:", error);
-      process.exit(1);
-    });
+      console.error("💥 Seeding failed:", error)
+      process.exit(1)
+    })
 }
 
-export { seedIngredients };
+export { seedIngredients }

@@ -1,8 +1,11 @@
-"use client";
+"use client"
 
-import { useEffect, useMemo, useState } from "react";
-import { Search, XIcon } from "lucide-react";
+import { Search, XIcon } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
 
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogClose,
@@ -10,24 +13,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
-import { beerStyleTemplates, type BeerStyleTemplate } from "@/lib/templates";
+} from "@/components/ui/dialog"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from "@/components/ui/input-group";
+} from "@/components/ui/input-group"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { beerStyleTemplates, type BeerStyleTemplate } from "@/lib/templates"
 
 type TemplateDialogProps = {
-  open: boolean;
-  onOpenChange: (_open: boolean) => void;
-  onSelectTemplate: (_template: BeerStyleTemplate) => void;
-  onStartFromScratch: () => void;
-};
+  open: boolean
+  onOpenChange: (_open: boolean) => void
+  onSelectTemplate: (_template: BeerStyleTemplate) => void
+  onStartFromScratch: () => void
+}
 
 const FAMILY_LABELS = {
   ale: "Ale",
@@ -35,11 +35,11 @@ const FAMILY_LABELS = {
   stout: "Stout",
   "mixed-fermentation": "Mixed Ferm",
   other: "Specialty & Other",
-} satisfies Record<BeerStyleTemplate["styleFamily"], string>;
+} satisfies Record<BeerStyleTemplate["styleFamily"], string>
 
 const templateList = Object.values(beerStyleTemplates).sort((a, b) =>
-  a.name.localeCompare(b.name)
-);
+  a.name.localeCompare(b.name),
+)
 
 export function TemplateDialog({
   open,
@@ -54,41 +54,41 @@ export function TemplateDialog({
       stout: 2,
       "mixed-fermentation": 3,
       other: 4,
-    };
+    }
     return Array.from(
       new Set<BeerStyleTemplate["styleFamily"]>(
-        templateList.map((template) => template.styleFamily)
-      )
-    ).sort((a, b) => ORDER[a] - ORDER[b]);
-  }, []);
+        templateList.map((template) => template.styleFamily),
+      ),
+    ).sort((a, b) => ORDER[a] - ORDER[b])
+  }, [])
 
   const [selectedFamilies, setSelectedFamilies] = useState<
     BeerStyleTemplate["styleFamily"][]
-  >([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  >([])
+  const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
     if (selectedFamilies.length === 0 && familyOptions.length > 0) {
-      setSelectedFamilies(familyOptions);
+      setSelectedFamilies(familyOptions)
     }
-  }, [familyOptions, selectedFamilies.length]);
+  }, [familyOptions, selectedFamilies.length])
 
   useEffect(() => {
     if (!open) {
-      setSearchTerm("");
+      setSearchTerm("")
     }
-  }, [open]);
+  }, [open])
 
   const filteredTemplates = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
+    const term = searchTerm.trim().toLowerCase()
 
     return templateList.filter((template) => {
       if (!selectedFamilies.includes(template.styleFamily)) {
-        return false;
+        return false
       }
 
       if (!term) {
-        return true;
+        return true
       }
 
       const haystack = [
@@ -105,11 +105,11 @@ export function TemplateDialog({
       ]
         .filter(Boolean)
         .join(" ")
-        .toLowerCase();
+        .toLowerCase()
 
-      return haystack.includes(term);
-    });
-  }, [searchTerm, selectedFamilies]);
+      return haystack.includes(term)
+    })
+  }, [searchTerm, selectedFamilies])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -145,10 +145,10 @@ export function TemplateDialog({
                     </p>
                   </div>
                   {familyOptions.map((family) => {
-                    const isChecked = selectedFamilies.includes(family);
+                    const isChecked = selectedFamilies.includes(family)
                     const label =
                       FAMILY_LABELS[family as keyof typeof FAMILY_LABELS] ??
-                      family;
+                      family
 
                     return (
                       <label
@@ -159,18 +159,18 @@ export function TemplateDialog({
                           checked={isChecked}
                           onCheckedChange={(checked) => {
                             setSelectedFamilies((previous) => {
-                              const next = new Set(previous);
-                              const on = Boolean(checked);
+                              const next = new Set(previous)
+                              const on = Boolean(checked)
                               if (on) {
-                                next.add(family);
+                                next.add(family)
                               } else {
-                                next.delete(family);
+                                next.delete(family)
                                 if (next.size === 0) {
-                                  return previous; // prevent zero selections
+                                  return previous // prevent zero selections
                                 }
                               }
-                              return Array.from(next);
-                            });
+                              return Array.from(next)
+                            })
                           }}
                           aria-label={label}
                         />
@@ -178,7 +178,7 @@ export function TemplateDialog({
                           {label}
                         </span>
                       </label>
-                    );
+                    )
                   })}
                 </div>
               </ScrollArea>
@@ -238,8 +238,8 @@ export function TemplateDialog({
             <Button
               variant="ghost"
               onClick={() => {
-                onStartFromScratch();
-                onOpenChange(false);
+                onStartFromScratch()
+                onOpenChange(false)
               }}
             >
               Start from scratch
@@ -251,7 +251,7 @@ export function TemplateDialog({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
-TemplateDialog.displayName = "TemplateDialog";
+TemplateDialog.displayName = "TemplateDialog"

@@ -5,15 +5,15 @@
  */
 
 import {
-  calculateOG,
+  calculateABV,
   calculateFG,
   calculateIBU,
+  calculateOG,
   calculateSRM,
-  calculateABV,
   type Fermentable,
-  type Hop,
   type FermentableColor,
-} from "@/lib/calc";
+  type Hop,
+} from "@/lib/calc"
 
 // NEIPA recipe ingredients
 // Potential values expressed in PPG (points per pound per gallon)
@@ -22,26 +22,32 @@ const neipaFermentables: Fermentable[] = [
   { potential: 35, amountKg: 0.3, efficiency: 0.75 },
   { potential: 36, amountKg: 0.3, efficiency: 0.75 },
   { potential: 32, amountKg: 0.3, efficiency: 0.75 },
-];
+]
 
 const neipaHops: Hop[] = [
   { alphaAcid: 14, amountG: 3, timeMin: 60, type: "boil" },
-  { alphaAcid: 12, amountG: 4, timeMin: 5, type: "whirlpool", temperatureC: 80 },
+  {
+    alphaAcid: 12,
+    amountG: 4,
+    timeMin: 5,
+    type: "whirlpool",
+    temperatureC: 80,
+  },
   { alphaAcid: 12, amountG: 30, timeMin: 0, type: "dry-hop" },
-];
+]
 
 const neipaFermentablesColor: FermentableColor[] = [
   { color: 2, amountKg: 1.8 },
   { color: 9, amountKg: 0.3 },
   { color: 2, amountKg: 0.3 },
   { color: 60, amountKg: 0.3 },
-];
+]
 
 // Recipe parameters
-const batchSizeL = 10;
-const efficiency = 0.75;
-const yeastAttenuation = 75; // US-05 average
-const hopUtilizationMultiplier = 0.88; // NEIPA adjustment
+const batchSizeL = 10
+const efficiency = 0.75
+const yeastAttenuation = 75 // US-05 average
+const hopUtilizationMultiplier = 0.88 // NEIPA adjustment
 
 // Reference values from Brewer's Friend
 const referenceValues = {
@@ -50,23 +56,23 @@ const referenceValues = {
   abv: 6.5,
   ibu: 59,
   srm: 5.2,
-};
+}
 
 export function validateNEIPACalculations() {
-  console.log("🍺 NEIPA Recipe Validation");
-  console.log("==========================");
+  console.log("🍺 NEIPA Recipe Validation")
+  console.log("==========================")
 
   // Calculate values
-  const og = calculateOG(neipaFermentables, batchSizeL, efficiency);
-  const fg = calculateFG(og, yeastAttenuation);
-  const abvResult = calculateABV(og, fg);
+  const og = calculateOG(neipaFermentables, batchSizeL, efficiency)
+  const fg = calculateFG(og, yeastAttenuation)
+  const abvResult = calculateABV(og, fg)
   const ibuResult = calculateIBU(neipaHops, {
     finalVolumeL: batchSizeL,
     preBoilVolumeL: 12,
     og,
     utilizationMultiplier: hopUtilizationMultiplier,
-  });
-  const srm = calculateSRM(neipaFermentablesColor, batchSizeL);
+  })
+  const srm = calculateSRM(neipaFermentablesColor, batchSizeL)
 
   // Results
   const results = {
@@ -75,10 +81,10 @@ export function validateNEIPACalculations() {
     abv: Math.round(abvResult.abv * 10) / 10,
     ibu: Math.round(ibuResult.ibu * 10) / 10,
     srm: Math.round(srm * 10) / 10,
-  };
+  }
 
   // Validation
-  const tolerance = 0.02; // 2% tolerance
+  const tolerance = 0.02 // 2% tolerance
   const validations = {
     og:
       Math.abs(results.og - referenceValues.og) / referenceValues.og <=
@@ -95,62 +101,50 @@ export function validateNEIPACalculations() {
     srm:
       Math.abs(results.srm - referenceValues.srm) / referenceValues.srm <=
       tolerance,
-  };
+  }
 
   // Output results
-  console.log("\n📊 Calculation Results:");
+  console.log("\n📊 Calculation Results:")
   console.log(
-    `OG:  ${results.og} (target: ${referenceValues.og}) ${
-      validations.og ? "✅" : "❌"
-    }`
-  );
+    `OG:  ${results.og} (target: ${referenceValues.og}) ${validations.og ? "✅" : "❌"}`,
+  )
   console.log(
-    `FG:  ${results.fg} (target: ${referenceValues.fg}) ${
-      validations.fg ? "✅" : "❌"
-    }`
-  );
+    `FG:  ${results.fg} (target: ${referenceValues.fg}) ${validations.fg ? "✅" : "❌"}`,
+  )
   console.log(
-    `ABV: ${results.abv}% (target: ${referenceValues.abv}%) ${
-      validations.abv ? "✅" : "❌"
-    }`
-  );
+    `ABV: ${results.abv}% (target: ${referenceValues.abv}%) ${validations.abv ? "✅" : "❌"}`,
+  )
   console.log(
-    `IBU: ${results.ibu} (target: ${referenceValues.ibu}) ${
-      validations.ibu ? "✅" : "❌"
-    }`
-  );
+    `IBU: ${results.ibu} (target: ${referenceValues.ibu}) ${validations.ibu ? "✅" : "❌"}`,
+  )
   console.log(
-    `SRM: ${results.srm} (target: ${referenceValues.srm}) ${
-      validations.srm ? "✅" : "❌"
-    }`
-  );
+    `SRM: ${results.srm} (target: ${referenceValues.srm}) ${validations.srm ? "✅" : "❌"}`,
+  )
 
-  console.log("\n🧮 Detailed Calculations:");
+  console.log("\n🧮 Detailed Calculations:")
   console.log(
-    `Total grain: ${neipaFermentables
-      .reduce((sum, f) => sum + f.amountKg, 0)
-      .toFixed(1)}kg`
-  );
+    `Total grain: ${neipaFermentables.reduce((sum, f) => sum + f.amountKg, 0).toFixed(1)}kg`,
+  )
   console.log(
-    `Total hops: ${neipaHops.reduce((sum, h) => sum + h.amountG, 0)}g`
-  );
+    `Total hops: ${neipaHops.reduce((sum, h) => sum + h.amountG, 0)}g`,
+  )
   console.log(
     `IBU contributions:`,
-    ibuResult.contributions.map((c) => `${c.hop}: ${c.contribution.toFixed(1)}`)
-  );
+    ibuResult.contributions.map(
+      (c) => `${c.hop}: ${c.contribution.toFixed(1)}`,
+    ),
+  )
 
-  const allValid = Object.values(validations).every((v) => v);
+  const allValid = Object.values(validations).every((v) => v)
   console.log(
-    `\n${allValid ? "✅" : "❌"} Overall validation: ${
-      allValid ? "PASSED" : "FAILED"
-    }`
-  );
+    `\n${allValid ? "✅" : "❌"} Overall validation: ${allValid ? "PASSED" : "FAILED"}`,
+  )
 
   return {
     results,
     validations,
     allValid,
-  };
+  }
 }
 
 // Export the test recipe data for use in the app
@@ -163,4 +157,4 @@ export const neipaTestRecipe = {
   yeastAttenuation,
   hopUtilizationMultiplier,
   referenceValues,
-};
+}

@@ -1,18 +1,10 @@
-/** @type {import('prettier').Config} */
-export default {
-  // Keep consistent, readable diffs
-  semi: true,
-  singleQuote: false,
-  trailingComma: "all",
-  printWidth: 100,
+/**
+ * @see https://prettier.io/docs/configuration
+ * @type {import("prettier").Config & import('prettier-plugin-tailwindcss').PluginOptions}
+ */
+const config = {
+  semi: false,
+  plugins: ["prettier-plugin-tailwindcss", "prettier-plugin-organize-imports"],
+}
 
-  // Plugins
-  plugins: [
-    "prettier-plugin-tailwindcss",
-    "prettier-plugin-organize-imports",
-  ],
-
-  // Tailwind class sorting
-  tailwindAttributes: ["class", "className"],
-};
-
+export default config

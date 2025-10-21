@@ -3,20 +3,20 @@
  * Fixed header showing calculated brewing stats as badges
  */
 
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
 
 export interface RecipeStats {
-  og: number;
-  fg: number;
-  abv: number;
-  ibu: number;
-  srm: number;
+  og: number
+  fg: number
+  abv: number
+  ibu: number
+  srm: number
 }
 
 interface RecipeStatsBarProps {
-  stats: RecipeStats;
-  className?: string;
+  stats: RecipeStats
+  className?: string
 }
 
 export function RecipeStatsBar({ stats, className }: RecipeStatsBarProps) {
@@ -37,5 +37,5 @@ export function RecipeStatsBar({ stats, className }: RecipeStatsBarProps) {
         </div>
       </div>
     </Card>
-  );
+  )
 }

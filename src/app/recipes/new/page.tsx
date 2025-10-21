@@ -1,174 +1,174 @@
-"use client";
+"use client"
 
 /**
  * New Recipe Page
  * Create a new brewing recipe
  */
 
-import { nanoid } from "nanoid";
-import {
-  Save,
-  Wheat,
-  Beer,
-  Thermometer,
-  Plus,
-  Trash2,
-  Loader2,
-  Sparkles,
-} from "lucide-react";
-import { useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { RecipeStatsBar } from "@/components/recipe-stats";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { createRecipe } from "@/app/recipes/actions"
+import { CreateRecipeActionInput } from "@/app/recipes/actions.shared"
+import { RecipeStatsBar } from "@/components/recipe-stats"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Empty,
+  EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-  EmptyDescription,
-} from "@/components/ui/empty";
+} from "@/components/ui/empty"
+import { Field, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "@/components/ui/input-group"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  InputGroupText,
-} from "@/components/ui/input-group";
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import {
   useNewRecipeStore,
   type HopEntry,
   type MashStepEntry,
   type RecipeMethod,
-} from "@/hooks/use-new-recipe-store";
-import { useRecipeCalculations } from "@/hooks/use-recipe-calculations";
+} from "@/hooks/use-new-recipe-store"
+import { useRecipeCalculations } from "@/hooks/use-recipe-calculations"
+import { useSession } from "@/lib/auth-client"
 import {
+  calculateClToSO4Ratio,
+  getWaterProfileDescription,
   SALT_COMPOSITIONS,
   type IonProfile,
   type SaltAddition,
-  calculateClToSO4Ratio,
-  getWaterProfileDescription,
-} from "@/lib/calc/water";
-import { createRecipe } from "@/app/recipes/actions";
-import { CreateRecipeActionInput } from "@/app/recipes/actions.shared";
-import { useSession } from "@/lib/auth-client";
-import { toast } from "sonner";
-import { type BeerStyleTemplate } from "@/lib/templates";
-import { TemplateDialog } from "./template-dialog";
+} from "@/lib/calc/water"
+import { type BeerStyleTemplate } from "@/lib/templates"
+import {
+  Beer,
+  Loader2,
+  Plus,
+  Save,
+  Sparkles,
+  Thermometer,
+  Trash2,
+  Wheat,
+} from "lucide-react"
+import { nanoid } from "nanoid"
+import { useRouter } from "next/navigation"
+import { useEffect, useState, useTransition } from "react"
+import { toast } from "sonner"
+import { TemplateDialog } from "./template-dialog"
 
 type FermentableOption = {
-  id: string;
-  name: string;
-  origin: string;
-  potential: number;
-  potentialUnit?: "PPG" | "PKL";
-  color: number;
-  colorUnit?: "L" | "SRM" | "EBC";
-  description: string;
-};
+  id: string
+  name: string
+  origin: string
+  potential: number
+  potentialUnit?: "PPG" | "PKL"
+  color: number
+  colorUnit?: "L" | "SRM" | "EBC"
+  description: string
+}
 
 type HopOption = {
-  id: string;
-  name: string;
-  origin: string;
-  alphaAcid: number;
-  description: string;
-};
+  id: string
+  name: string
+  origin: string
+  alphaAcid: number
+  description: string
+}
 
 type WaterProfileOption = {
-  id: string;
-  name: string;
-  description: string;
-  profile: IonProfile;
-};
+  id: string
+  name: string
+  description: string
+  profile: IonProfile
+}
 
 type SaltOption = {
-  id: string;
-  name: string;
-  description: string;
-};
+  id: string
+  name: string
+  description: string
+}
 
 function getSuggestedBoilSize(
   targetBatchSize: number,
-  fallbackBoilSize: number
+  fallbackBoilSize: number,
 ) {
   if (!targetBatchSize || targetBatchSize <= 0) {
-    return fallbackBoilSize;
+    return fallbackBoilSize
   }
 
-  const buffer = Math.max(targetBatchSize * 0.15, 1.5);
+  const buffer = Math.max(targetBatchSize * 0.15, 1.5)
   return Math.max(
     Math.round((targetBatchSize + buffer) * 10) / 10,
-    targetBatchSize
-  );
+    targetBatchSize,
+  )
 }
 
-const DEFAULT_MASH_TEMPERATURE = 66;
-const DEFAULT_MASH_DURATION = 60;
+const DEFAULT_MASH_TEMPERATURE = 66
+const DEFAULT_MASH_DURATION = 60
 
 function inferMashStepType(title: string): MashStepEntry["stepType"] {
-  const normalized = title.toLowerCase();
+  const normalized = title.toLowerCase()
 
   if (normalized.includes("mash out") || normalized.includes("mash-out")) {
-    return "mashout";
+    return "mashout"
   }
 
   if (normalized.includes("sparge")) {
-    return "sparge";
+    return "sparge"
   }
 
-  return "strike";
+  return "strike"
 }
 
 function parseProcessTarget(target?: string) {
-  const normalized = target?.replace(/–/g, "-") ?? "";
+  const normalized = target?.replace(/–/g, "-") ?? ""
   const temperatureMatch = normalized.match(
-    /(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?\s*°C/i
-  );
+    /(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?\s*°C/i,
+  )
 
-  let temperature: number | undefined;
+  let temperature: number | undefined
   if (temperatureMatch) {
-    const first = Number.parseFloat(temperatureMatch[1] ?? "0");
+    const first = Number.parseFloat(temperatureMatch[1] ?? "0")
     const second = temperatureMatch[2]
       ? Number.parseFloat(temperatureMatch[2] ?? "0")
-      : undefined;
+      : undefined
     const average = Number.isFinite(second)
       ? (first + (second ?? 0)) / (second ? 2 : 1)
-      : first;
-    temperature = Math.round(average * 10) / 10;
+      : first
+    temperature = Math.round(average * 10) / 10
   }
 
   const timeMatch = normalized.match(
-    /(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?\s*(?:min|minutes)/i
-  );
+    /(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?\s*(?:min|minutes)/i,
+  )
 
-  let timeMin: number | undefined;
+  let timeMin: number | undefined
   if (timeMatch) {
-    const first = Number.parseFloat(timeMatch[1] ?? "0");
+    const first = Number.parseFloat(timeMatch[1] ?? "0")
     const second = timeMatch[2]
       ? Number.parseFloat(timeMatch[2] ?? "0")
-      : undefined;
+      : undefined
     const average = Number.isFinite(second)
       ? (first + (second ?? 0)) / (second ? 2 : 1)
-      : first;
-    timeMin = Math.round(average);
+      : first
+    timeMin = Math.round(average)
   }
 
-  return { temperature, timeMin };
+  return { temperature, timeMin }
 }
 
 function buildMashStepsFromTemplate(template: BeerStyleTemplate) {
   const steps = template.recommendedRecipe.mashProfile.map((step) => {
-    const { temperature, timeMin } = parseProcessTarget(step.target);
+    const { temperature, timeMin } = parseProcessTarget(step.target)
 
     return {
       id: nanoid(),
@@ -176,11 +176,11 @@ function buildMashStepsFromTemplate(template: BeerStyleTemplate) {
       temperatureC:
         Math.round((temperature ?? DEFAULT_MASH_TEMPERATURE) * 10) / 10,
       timeMin: timeMin ?? DEFAULT_MASH_DURATION,
-    } satisfies MashStepEntry;
-  });
+    } satisfies MashStepEntry
+  })
 
   if (steps.length > 0) {
-    return steps;
+    return steps
   }
 
   return [
@@ -190,33 +190,33 @@ function buildMashStepsFromTemplate(template: BeerStyleTemplate) {
       temperatureC: DEFAULT_MASH_TEMPERATURE,
       timeMin: DEFAULT_MASH_DURATION,
     },
-  ];
+  ]
 }
 
 function estimateFermentationTemperature(template: BeerStyleTemplate) {
   for (const step of template.recommendedRecipe.fermentationProfile) {
-    const { temperature } = parseProcessTarget(step.target);
+    const { temperature } = parseProcessTarget(step.target)
     if (typeof temperature === "number" && !Number.isNaN(temperature)) {
-      return Math.round(temperature);
+      return Math.round(temperature)
     }
   }
 
-  return undefined;
+  return undefined
 }
 
 function composeTemplateNotes(template: BeerStyleTemplate) {
-  const sections: string[] = [];
+  const sections: string[] = []
 
   if (template.description) {
-    sections.push(template.description.trim());
+    sections.push(template.description.trim())
   }
 
   if (template.processGuidance?.tips?.length) {
     sections.push(
       ["Tips:", ...template.processGuidance.tips.map((tip) => `• ${tip}`)].join(
-        "\n"
-      )
-    );
+        "\n",
+      ),
+    )
   }
 
   if (template.processGuidance?.pitfalls?.length) {
@@ -224,8 +224,8 @@ function composeTemplateNotes(template: BeerStyleTemplate) {
       [
         "Watch outs:",
         ...template.processGuidance.pitfalls.map((item) => `• ${item}`),
-      ].join("\n")
-    );
+      ].join("\n"),
+    )
   }
 
   if (template.processGuidance?.variations?.length) {
@@ -233,11 +233,11 @@ function composeTemplateNotes(template: BeerStyleTemplate) {
       [
         "Variations:",
         ...template.processGuidance.variations.map((item) => `• ${item}`),
-      ].join("\n")
-    );
+      ].join("\n"),
+    )
   }
 
-  return sections.join("\n\n");
+  return sections.join("\n\n")
 }
 
 const FERMENTABLE_OPTIONS: FermentableOption[] = [
@@ -321,7 +321,7 @@ const FERMENTABLE_OPTIONS: FermentableOption[] = [
     color: 1,
     description: "Unmalted oats for smooth mouthfeel",
   },
-];
+]
 
 const HOP_OPTIONS: HopOption[] = [
   {
@@ -387,7 +387,7 @@ const HOP_OPTIONS: HopOption[] = [
     alphaAcid: 5,
     description: "Noble hop with floral and spicy notes",
   },
-];
+]
 
 const WATER_PROFILE_OPTIONS: WaterProfileOption[] = [
   {
@@ -414,7 +414,7 @@ const WATER_PROFILE_OPTIONS: WaterProfileOption[] = [
     description: "High sulfate profile for assertive pale ales",
     profile: { ca: 275, mg: 40, na: 25, cl: 35, so4: 450, hco3: 300 },
   },
-];
+]
 
 const SALT_OPTIONS: SaltOption[] = [
   {
@@ -447,7 +447,7 @@ const SALT_OPTIONS: SaltOption[] = [
     name: "Baking Soda (NaHCO3)",
     description: "Raises sodium and bicarbonate to balance acidity",
   },
-];
+]
 // Empty recipe template
 const emptyRecipe = {
   id: "new",
@@ -473,53 +473,53 @@ const emptyRecipe = {
     hco3: 0,
   },
   fermentationTempC: 20,
-};
+}
 
 export default function NewRecipePage() {
-  const formState = useNewRecipeStore((state) => state.formState);
-  const setFormState = useNewRecipeStore((state) => state.setFormState);
-  const fermentables = useNewRecipeStore((state) => state.fermentables);
-  const setFermentables = useNewRecipeStore((state) => state.setFermentables);
-  const hops = useNewRecipeStore((state) => state.hops);
-  const setHops = useNewRecipeStore((state) => state.setHops);
-  const waterProfileId = useNewRecipeStore((state) => state.waterProfileId);
+  const formState = useNewRecipeStore((state) => state.formState)
+  const setFormState = useNewRecipeStore((state) => state.setFormState)
+  const fermentables = useNewRecipeStore((state) => state.fermentables)
+  const setFermentables = useNewRecipeStore((state) => state.setFermentables)
+  const hops = useNewRecipeStore((state) => state.hops)
+  const setHops = useNewRecipeStore((state) => state.setHops)
+  const waterProfileId = useNewRecipeStore((state) => state.waterProfileId)
   const setWaterProfileId = useNewRecipeStore(
-    (state) => state.setWaterProfileId
-  );
-  const waterAdditions = useNewRecipeStore((state) => state.waterAdditions);
+    (state) => state.setWaterProfileId,
+  )
+  const waterAdditions = useNewRecipeStore((state) => state.waterAdditions)
   const setWaterAdditions = useNewRecipeStore(
-    (state) => state.setWaterAdditions
-  );
-  const mashSteps = useNewRecipeStore((state) => state.mashSteps);
-  const setMashSteps = useNewRecipeStore((state) => state.setMashSteps);
-  const addMashStep = useNewRecipeStore((state) => state.addMashStep);
-  const resetForm = useNewRecipeStore((state) => state.reset);
+    (state) => state.setWaterAdditions,
+  )
+  const mashSteps = useNewRecipeStore((state) => state.mashSteps)
+  const setMashSteps = useNewRecipeStore((state) => state.setMashSteps)
+  const addMashStep = useNewRecipeStore((state) => state.addMashStep)
+  const resetForm = useNewRecipeStore((state) => state.reset)
 
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const { data: sessionData, isPending: isSessionPending } = useSession();
-  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const { data: sessionData, isPending: isSessionPending } = useSession()
+  const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false)
 
   useEffect(() => {
     if (!isSessionPending && !sessionData) {
-      router.replace("/login");
+      router.replace("/login")
     }
-  }, [isSessionPending, sessionData, router]);
+  }, [isSessionPending, sessionData, router])
 
   // Removed auto-open of template dialog; dialog opens only via button
 
   function handleSave() {
-    const userId = sessionData?.user?.id;
+    const userId = sessionData?.user?.id
 
     if (!formState.name.trim()) {
-      toast.error("Recipe name is required");
-      return;
+      toast.error("Recipe name is required")
+      return
     }
 
     if (!userId) {
-      toast.error("You must be signed in to create a recipe");
-      router.replace("/login");
-      return;
+      toast.error("You must be signed in to create a recipe")
+      router.replace("/login")
+      return
     }
 
     const payload: CreateRecipeActionInput = {
@@ -553,28 +553,28 @@ export default function NewRecipePage() {
         temperatureC: item.temperatureC,
         timeMin: item.timeMin,
       })),
-    };
+    }
 
     startTransition(async () => {
-      const result = await createRecipe(payload);
+      const result = await createRecipe(payload)
 
       if (!result.ok) {
         if (result.fieldErrors) {
-          const messages = Object.values(result.fieldErrors).flat();
+          const messages = Object.values(result.fieldErrors).flat()
           if (messages.length > 0) {
-            toast.error(messages[0] ?? "Failed to save recipe");
-            return;
+            toast.error(messages[0] ?? "Failed to save recipe")
+            return
           }
         }
 
-        toast.error(result.message ?? "Failed to save recipe");
-        return;
+        toast.error(result.message ?? "Failed to save recipe")
+        return
       }
 
-      resetForm();
-      toast.success("Recipe saved successfully");
-      router.push(`/recipes/${result.recipeId}`);
-    });
+      resetForm()
+      toast.success("Recipe saved successfully")
+      router.push(`/recipes/${result.recipeId}`)
+    })
   }
 
   function handleSelectTemplate(template: BeerStyleTemplate) {
@@ -587,7 +587,7 @@ export default function NewRecipePage() {
       batchSizeL: template.recommendedRecipe.defaultBatchSizeL,
       boilSizeL: getSuggestedBoilSize(
         template.recommendedRecipe.defaultBatchSizeL,
-        previous.boilSizeL
+        previous.boilSizeL,
       ),
       efficiency:
         template.recommendedRecipe.efficiencyPct ?? previous.efficiency,
@@ -599,7 +599,7 @@ export default function NewRecipePage() {
       fermentationTempC:
         estimateFermentationTemperature(template) ?? previous.fermentationTempC,
       notes: composeTemplateNotes(template),
-    }));
+    }))
 
     // Map template fermentables to form fermentables
     const newFermentables = template.keyIngredients.baseMalts
@@ -610,8 +610,8 @@ export default function NewRecipePage() {
           (opt) =>
             opt.name.toLowerCase() === ingredient.name.toLowerCase() ||
             opt.name.toLowerCase().includes(ingredient.name.toLowerCase()) ||
-            ingredient.name.toLowerCase().includes(opt.name.toLowerCase())
-        );
+            ingredient.name.toLowerCase().includes(opt.name.toLowerCase()),
+        )
 
         return {
           id: nanoid(),
@@ -623,9 +623,9 @@ export default function NewRecipePage() {
           potentialUnit: option?.potentialUnit,
           color: option?.color ?? 5,
           colorUnit: option?.colorUnit,
-        };
-      });
-    setFermentables(() => newFermentables);
+        }
+      })
+    setFermentables(() => newFermentables)
 
     // Map template hops to form hops
     const newHops = template.keyIngredients.hops.map((ingredient) => {
@@ -633,8 +633,8 @@ export default function NewRecipePage() {
         (opt) =>
           opt.name.toLowerCase() === ingredient.name.toLowerCase() ||
           opt.name.toLowerCase().includes(ingredient.name.toLowerCase()) ||
-          ingredient.name.toLowerCase().includes(opt.name.toLowerCase())
-      );
+          ingredient.name.toLowerCase().includes(opt.name.toLowerCase()),
+      )
 
       return {
         id: nanoid(),
@@ -646,48 +646,48 @@ export default function NewRecipePage() {
         type: (ingredient.usage?.toLowerCase().includes("dry")
           ? "dry-hop"
           : ingredient.usage?.toLowerCase().includes("whirlpool")
-          ? "whirlpool"
-          : "boil") as HopEntry["type"],
+            ? "whirlpool"
+            : "boil") as HopEntry["type"],
         alphaAcid: option?.alphaAcid ?? 10,
-      };
-    });
-    setHops(() => newHops);
+      }
+    })
+    setHops(() => newHops)
 
     // Set water profile if available
     if (template.waterProfile?.baseProfileId) {
       const profileOption = WATER_PROFILE_OPTIONS.find(
-        (opt) => opt.id === template.waterProfile?.baseProfileId
-      );
+        (opt) => opt.id === template.waterProfile?.baseProfileId,
+      )
       if (profileOption) {
-        setWaterProfileId(profileOption.id);
+        setWaterProfileId(profileOption.id)
       }
     }
 
     // Clear water additions
-    setWaterAdditions(() => []);
+    setWaterAdditions(() => [])
 
     // Set mash steps
-    const newMashSteps = buildMashStepsFromTemplate(template);
-    setMashSteps(() => newMashSteps);
+    const newMashSteps = buildMashStepsFromTemplate(template)
+    setMashSteps(() => newMashSteps)
 
     // Close dialog
-    setIsTemplateDialogOpen(false);
-    toast.success(`Applied ${template.name} template`);
+    setIsTemplateDialogOpen(false)
+    toast.success(`Applied ${template.name} template`)
   }
 
   function handleStartFromScratch() {
-    setIsTemplateDialogOpen(false);
+    setIsTemplateDialogOpen(false)
   }
 
   const selectedWaterProfile =
     WATER_PROFILE_OPTIONS.find((option) => option.id === waterProfileId) ??
-    WATER_PROFILE_OPTIONS[0];
-  const baseWaterProfile = selectedWaterProfile.profile;
+    WATER_PROFILE_OPTIONS[0]
+  const baseWaterProfile = selectedWaterProfile.profile
   const waterAdditionsForCalc: SaltAddition[] = waterAdditions.flatMap(
     (addition) => {
-      const salt = SALT_COMPOSITIONS[addition.name];
+      const salt = SALT_COMPOSITIONS[addition.name]
       if (!salt || addition.amountG <= 0) {
-        return [];
+        return []
       }
 
       return Object.keys(salt).map((ion) => ({
@@ -695,9 +695,9 @@ export default function NewRecipePage() {
         amountG: addition.amountG,
         ionType: ion as SaltAddition["ionType"],
         volumeL: addition.volumeL ?? formState.batchSizeL,
-      }));
-    }
-  );
+      }))
+    },
+  )
 
   const stats = useRecipeCalculations({
     fermentables: fermentables.map((fermentable) => ({
@@ -725,28 +725,28 @@ export default function NewRecipePage() {
     hopUtilizationMultiplier: formState.hopUtilizationMultiplier,
     baseWaterProfile,
     fermentationTempC: formState.fermentationTempC,
-  });
-  const chlorideToSulfateRatioValue = calculateClToSO4Ratio(stats.ionProfile);
+  })
+  const chlorideToSulfateRatioValue = calculateClToSO4Ratio(stats.ionProfile)
   const chlorideToSulfateRatio =
     chlorideToSulfateRatioValue === Infinity
       ? "∞"
-      : chlorideToSulfateRatioValue.toFixed(2);
-  const waterProfileCharacter = getWaterProfileDescription(stats.ionProfile);
+      : chlorideToSulfateRatioValue.toFixed(2)
+  const waterProfileCharacter = getWaterProfileDescription(stats.ionProfile)
 
   if (isSessionPending) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
-    );
+    )
   }
 
   if (!sessionData) {
-    return null;
+    return null
   }
 
   function handleAddMashStep() {
-    addMashStep();
+    addMashStep()
   }
 
   function handleMashStepType(id: string, stepType: MashStepEntry["stepType"]) {
@@ -757,9 +757,9 @@ export default function NewRecipePage() {
               ...step,
               stepType,
             }
-          : step
-      )
-    );
+          : step,
+      ),
+    )
   }
 
   function handleMashStepTemperature(id: string, temperature: number) {
@@ -767,27 +767,27 @@ export default function NewRecipePage() {
       previous.map((step) =>
         step.id === id
           ? { ...step, temperatureC: temperature < 0 ? 0 : temperature }
-          : step
-      )
-    );
+          : step,
+      ),
+    )
   }
 
   function handleMashStepTime(id: string, time: number) {
     setMashSteps((previous) =>
       previous.map((step) =>
-        step.id === id ? { ...step, timeMin: time < 0 ? 0 : time } : step
-      )
-    );
+        step.id === id ? { ...step, timeMin: time < 0 ? 0 : time } : step,
+      ),
+    )
   }
 
   function handleRemoveMashStep(id: string) {
-    setMashSteps((previous) => previous.filter((step) => step.id !== id));
+    setMashSteps((previous) => previous.filter((step) => step.id !== id))
   }
 
   function handleAddFermentable() {
-    const option = FERMENTABLE_OPTIONS[0];
+    const option = FERMENTABLE_OPTIONS[0]
     if (!option) {
-      return;
+      return
     }
 
     setFermentables((previous) => [
@@ -803,13 +803,13 @@ export default function NewRecipePage() {
         color: option.color,
         colorUnit: option.colorUnit,
       },
-    ]);
+    ])
   }
 
   function handleFermentableSelection(id: string, optionId: string) {
-    const option = FERMENTABLE_OPTIONS.find((item) => item.id === optionId);
+    const option = FERMENTABLE_OPTIONS.find((item) => item.id === optionId)
     if (!option) {
-      return;
+      return
     }
 
     setFermentables((previous) =>
@@ -825,9 +825,9 @@ export default function NewRecipePage() {
               color: option.color,
               colorUnit: option.colorUnit,
             }
-          : fermentable
-      )
-    );
+          : fermentable,
+      ),
+    )
   }
 
   function handleFermentableAmount(id: string, amount: number) {
@@ -835,19 +835,19 @@ export default function NewRecipePage() {
       previous.map((fermentable) =>
         fermentable.id === id
           ? { ...fermentable, amountKg: amount < 0 ? 0 : amount }
-          : fermentable
-      )
-    );
+          : fermentable,
+      ),
+    )
   }
 
   function handleRemoveFermentable(id: string) {
-    setFermentables((previous) => previous.filter((item) => item.id !== id));
+    setFermentables((previous) => previous.filter((item) => item.id !== id))
   }
 
   function handleAddHop() {
-    const option = HOP_OPTIONS[0];
+    const option = HOP_OPTIONS[0]
     if (!option) {
-      return;
+      return
     }
 
     setHops((previous) => [
@@ -862,13 +862,13 @@ export default function NewRecipePage() {
         type: "boil",
         alphaAcid: option.alphaAcid,
       },
-    ]);
+    ])
   }
 
   function handleHopSelection(id: string, optionId: string) {
-    const option = HOP_OPTIONS.find((item) => item.id === optionId);
+    const option = HOP_OPTIONS.find((item) => item.id === optionId)
     if (!option) {
-      return;
+      return
     }
 
     setHops((previous) =>
@@ -881,45 +881,45 @@ export default function NewRecipePage() {
               origin: option.origin,
               alphaAcid: option.alphaAcid,
             }
-          : hop
-      )
-    );
+          : hop,
+      ),
+    )
   }
 
   function handleHopAmount(id: string, amount: number) {
     setHops((previous) =>
       previous.map((hop) =>
-        hop.id === id ? { ...hop, amountG: amount < 0 ? 0 : amount } : hop
-      )
-    );
+        hop.id === id ? { ...hop, amountG: amount < 0 ? 0 : amount } : hop,
+      ),
+    )
   }
 
   function handleHopTime(id: string, time: number) {
     setHops((previous) =>
       previous.map((hop) =>
-        hop.id === id ? { ...hop, timeMin: time < 0 ? 0 : time } : hop
-      )
-    );
+        hop.id === id ? { ...hop, timeMin: time < 0 ? 0 : time } : hop,
+      ),
+    )
   }
 
   function handleHopType(id: string, type: HopEntry["type"]) {
     setHops((previous) =>
-      previous.map((hop) => (hop.id === id ? { ...hop, type } : hop))
-    );
+      previous.map((hop) => (hop.id === id ? { ...hop, type } : hop)),
+    )
   }
 
   function handleRemoveHop(id: string) {
-    setHops((previous) => previous.filter((item) => item.id !== id));
+    setHops((previous) => previous.filter((item) => item.id !== id))
   }
 
   function handleWaterProfileChange(id: string) {
-    setWaterProfileId(id);
+    setWaterProfileId(id)
   }
 
   function handleAddWaterAddition() {
-    const option = SALT_OPTIONS[0];
+    const option = SALT_OPTIONS[0]
     if (!option) {
-      return;
+      return
     }
 
     setWaterAdditions((previous) => [
@@ -931,13 +931,13 @@ export default function NewRecipePage() {
         amountG: 1,
         volumeL: formState.batchSizeL,
       },
-    ]);
+    ])
   }
 
   function handleWaterAdditionSelection(id: string, optionId: string) {
-    const option = SALT_OPTIONS.find((item) => item.id === optionId);
+    const option = SALT_OPTIONS.find((item) => item.id === optionId)
     if (!option) {
-      return;
+      return
     }
 
     setWaterAdditions((previous) =>
@@ -948,9 +948,9 @@ export default function NewRecipePage() {
               optionId,
               name: option.name,
             }
-          : addition
-      )
-    );
+          : addition,
+      ),
+    )
   }
 
   function handleWaterAdditionAmount(id: string, amount: number) {
@@ -958,13 +958,13 @@ export default function NewRecipePage() {
       previous.map((addition) =>
         addition.id === id
           ? { ...addition, amountG: amount < 0 ? 0 : amount }
-          : addition
-      )
-    );
+          : addition,
+      ),
+    )
   }
 
   function handleRemoveWaterAddition(id: string) {
-    setWaterAdditions((previous) => previous.filter((item) => item.id !== id));
+    setWaterAdditions((previous) => previous.filter((item) => item.id !== id))
   }
 
   return (
@@ -1204,7 +1204,7 @@ export default function NewRecipePage() {
                             onChange={(event) =>
                               handleFermentableAmount(
                                 fermentable.id,
-                                Number(event.target.value) || 0
+                                Number(event.target.value) || 0,
                               )
                             }
                             aria-label="Fermentable amount (kg)"
@@ -1270,7 +1270,7 @@ export default function NewRecipePage() {
                           onValueChange={(value) =>
                             handleMashStepType(
                               step.id,
-                              value as MashStepEntry["stepType"]
+                              value as MashStepEntry["stepType"],
                             )
                           }
                         >
@@ -1297,12 +1297,10 @@ export default function NewRecipePage() {
                             onChange={(event) =>
                               handleMashStepTemperature(
                                 step.id,
-                                Number(event.target.value) || 0
+                                Number(event.target.value) || 0,
                               )
                             }
-                            aria-label={`Mash step ${
-                              index + 1
-                            } temperature (°C)`}
+                            aria-label={`Mash step ${index + 1} temperature (°C)`}
                           />
                           <InputGroupAddon align="inline-end">
                             <InputGroupText>°C</InputGroupText>
@@ -1322,7 +1320,7 @@ export default function NewRecipePage() {
                             onChange={(event) =>
                               handleMashStepTime(
                                 step.id,
-                                Number(event.target.value) || 0
+                                Number(event.target.value) || 0,
                               )
                             }
                             aria-label={`Mash step ${index + 1} time (minutes)`}
@@ -1452,7 +1450,7 @@ export default function NewRecipePage() {
                             onChange={(event) =>
                               handleHopAmount(
                                 hop.id,
-                                Number(event.target.value) || 0
+                                Number(event.target.value) || 0,
                               )
                             }
                             aria-label="Hop amount (g)"
@@ -1489,7 +1487,7 @@ export default function NewRecipePage() {
                             onChange={(event) =>
                               handleHopTime(
                                 hop.id,
-                                Number(event.target.value) || 0
+                                Number(event.target.value) || 0,
                               )
                             }
                             aria-label="Addition time (minutes)"
@@ -1630,7 +1628,7 @@ export default function NewRecipePage() {
                               onChange={(event) =>
                                 handleWaterAdditionAmount(
                                   addition.id,
-                                  Number(event.target.value) || 0
+                                  Number(event.target.value) || 0,
                                 )
                               }
                               aria-label="Salt amount (g)"
@@ -1701,5 +1699,5 @@ export default function NewRecipePage() {
         onStartFromScratch={handleStartFromScratch}
       />
     </div>
-  );
+  )
 }

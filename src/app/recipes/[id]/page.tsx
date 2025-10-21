@@ -3,21 +3,21 @@
  * Two-column layout with auto-calculating stats
  */
 
-import { RecipeStatsBar } from "@/components/recipe-stats";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { RecipeStatsBar } from "@/components/recipe-stats"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Field, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Save, Plus, Trash2 } from "lucide-react";
-import { useRecipeCalculations } from "@/hooks/use-recipe-calculations";
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { useRecipeCalculations } from "@/hooks/use-recipe-calculations"
+import { Plus, Save, Trash2 } from "lucide-react"
 
 // Mock data for now
 const mockRecipe = {
@@ -71,11 +71,11 @@ const mockRecipe = {
     hco3: 0,
   },
   fermentationTempC: 20,
-};
+}
 
 export default function RecipeEditorPage() {
   // Calculate stats using the hook
-  const stats = useRecipeCalculations(mockRecipe);
+  const stats = useRecipeCalculations(mockRecipe)
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -396,5 +396,5 @@ export default function RecipeEditorPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

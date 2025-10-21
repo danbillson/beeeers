@@ -1,81 +1,81 @@
-"use client";
+"use client"
 
-import { nanoid } from "nanoid";
-import { create } from "zustand";
+import { nanoid } from "nanoid"
+import { create } from "zustand"
 
-export type RecipeMethod = "all-grain" | "extract" | "partial";
+export type RecipeMethod = "all-grain" | "extract" | "partial"
 
 export type RecipeFormState = {
-  name: string;
-  style: string;
-  method: RecipeMethod;
-  batchSizeL: number;
-  boilSizeL: number;
-  efficiency: number;
-  boilTimeMin: number;
-  hopUtilizationMultiplier: number;
-  fermentationTempC: number;
-  notes: string;
-};
+  name: string
+  style: string
+  method: RecipeMethod
+  batchSizeL: number
+  boilSizeL: number
+  efficiency: number
+  boilTimeMin: number
+  hopUtilizationMultiplier: number
+  fermentationTempC: number
+  notes: string
+}
 
 export type FermentableEntry = {
-  id: string;
-  optionId: string;
-  name: string;
-  origin: string;
-  amountKg: number;
-  potential: number;
-  potentialUnit?: "PPG" | "PKL";
-  color: number;
-  colorUnit?: "L" | "SRM" | "EBC";
-};
+  id: string
+  optionId: string
+  name: string
+  origin: string
+  amountKg: number
+  potential: number
+  potentialUnit?: "PPG" | "PKL"
+  color: number
+  colorUnit?: "L" | "SRM" | "EBC"
+}
 
 export type HopEntry = {
-  id: string;
-  optionId: string;
-  name: string;
-  origin: string;
-  amountG: number;
-  timeMin: number;
-  type: "boil" | "whirlpool" | "dry-hop";
-  alphaAcid: number;
-};
+  id: string
+  optionId: string
+  name: string
+  origin: string
+  amountG: number
+  timeMin: number
+  type: "boil" | "whirlpool" | "dry-hop"
+  alphaAcid: number
+}
 
 export type WaterAdditionEntry = {
-  id: string;
-  optionId: string;
-  name: string;
-  amountG: number;
-  volumeL?: number;
-};
+  id: string
+  optionId: string
+  name: string
+  amountG: number
+  volumeL?: number
+}
 
 export type MashStepEntry = {
-  id: string;
-  stepType: "strike" | "sparge" | "mashout";
-  temperatureC: number;
-  timeMin: number;
-};
+  id: string
+  stepType: "strike" | "sparge" | "mashout"
+  temperatureC: number
+  timeMin: number
+}
 
-export const DEFAULT_WATER_PROFILE_ID = "reverse-osmosis";
+export const DEFAULT_WATER_PROFILE_ID = "reverse-osmosis"
 
-type Updater<T> = (_previous: T) => T;
+type Updater<T> = (_previous: T) => T
 
 type NewRecipeState = {
-  formState: RecipeFormState;
-  fermentables: FermentableEntry[];
-  hops: HopEntry[];
-  waterProfileId: string;
-  waterAdditions: WaterAdditionEntry[];
-  mashSteps: MashStepEntry[];
-  setFormState: (_updater: Updater<RecipeFormState>) => void;
-  setFermentables: (_updater: Updater<FermentableEntry[]>) => void;
-  setHops: (_updater: Updater<HopEntry[]>) => void;
-  setWaterProfileId: (_id: string) => void;
-  setWaterAdditions: (_updater: Updater<WaterAdditionEntry[]>) => void;
-  setMashSteps: (_updater: Updater<MashStepEntry[]>) => void;
-  addMashStep: () => void;
-  reset: () => void;
-};
+  formState: RecipeFormState
+  fermentables: FermentableEntry[]
+  hops: HopEntry[]
+  waterProfileId: string
+  waterAdditions: WaterAdditionEntry[]
+  mashSteps: MashStepEntry[]
+  setFormState: (_updater: Updater<RecipeFormState>) => void
+  setFermentables: (_updater: Updater<FermentableEntry[]>) => void
+  setHops: (_updater: Updater<HopEntry[]>) => void
+  setWaterProfileId: (_id: string) => void
+  setWaterAdditions: (_updater: Updater<WaterAdditionEntry[]>) => void
+  setMashSteps: (_updater: Updater<MashStepEntry[]>) => void
+  addMashStep: () => void
+  reset: () => void
+}
 
 const initialFormState: RecipeFormState = {
   name: "",
@@ -88,7 +88,7 @@ const initialFormState: RecipeFormState = {
   hopUtilizationMultiplier: 1.0,
   fermentationTempC: 20,
   notes: "",
-};
+}
 
 const createInitialState = (): Omit<
   NewRecipeState,
@@ -107,7 +107,7 @@ const createInitialState = (): Omit<
   waterProfileId: DEFAULT_WATER_PROFILE_ID,
   waterAdditions: [],
   mashSteps: [],
-});
+})
 
 export const useNewRecipeStore = create<NewRecipeState>()((set) => ({
   ...createInitialState(),
@@ -160,4 +160,4 @@ export const useNewRecipeStore = create<NewRecipeState>()((set) => ({
     set(() => ({
       ...createInitialState(),
     })),
-}));
+}))

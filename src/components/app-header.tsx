@@ -1,9 +1,9 @@
-import Link from "next/link";
+import Link from "next/link"
 
 const navLinks = [
   { href: "/recipes", label: "Recipes" },
   { href: "/recipes/new", label: "Create Recipe" },
-];
+]
 
 export function AppHeader() {
   return (
@@ -25,5 +25,5 @@ export function AppHeader() {
         </nav>
       </div>
     </header>
-  );
+  )
 }

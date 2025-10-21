@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { signIn } from "@/lib/auth-client";
-import { Github } from "lucide-react";
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { signIn } from "@/lib/auth-client"
+import { Github } from "lucide-react"
 
 export default function LoginPage() {
   return (
@@ -26,5 +26,5 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

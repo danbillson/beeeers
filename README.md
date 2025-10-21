@@ -23,30 +23,34 @@ A modern brewing companion web app for creating, managing, and refining beer rec
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - PostgreSQL database
 - pnpm
 
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd beeeers
 ```
 
 2. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 3. Set up environment variables:
+
 ```bash
 cp .env.local.example .env.local
 # Edit .env.local with your database credentials
 ```
 
 4. Set up the database:
+
 ```bash
 # Generate migrations
 pnpm drizzle-kit generate
@@ -59,6 +63,7 @@ pnpm tsx src/db/seed.ts
 ```
 
 5. Start the development server:
+
 ```bash
 pnpm dev
 ```

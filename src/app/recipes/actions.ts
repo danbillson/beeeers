@@ -2,42 +2,42 @@
  * Server actions for recipe management
  */
 
-"use server";
+"use server"
 
-import { db } from "@/db";
-import {
-  recipes,
-  recipeFermentables,
-  recipeHops,
-  recipeYeast,
-  recipeWaterAdditions,
-  recipeOtherAdditions,
-  mashSteps,
-  ingredients,
-} from "@/db/schema";
-import { z } from "zod";
-import { nanoid } from "nanoid";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { and, eq, inArray } from "drizzle-orm";
-import { SALT_COMPOSITIONS } from "@/lib/calc/water";
 import {
   createRecipeActionSchema,
   type CreateRecipeActionInput,
-} from "@/app/recipes/actions.shared";
+} from "@/app/recipes/actions.shared"
+import { db } from "@/db"
+import {
+  ingredients,
+  mashSteps,
+  recipeFermentables,
+  recipeHops,
+  recipeOtherAdditions,
+  recipes,
+  recipeWaterAdditions,
+  recipeYeast,
+} from "@/db/schema"
+import { SALT_COMPOSITIONS } from "@/lib/calc/water"
+import { and, eq, inArray } from "drizzle-orm"
+import { nanoid } from "nanoid"
+import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
+import { z } from "zod"
 
 type CreateRecipeResult =
   | { ok: true; recipeId: string }
-  | { ok: false; fieldErrors?: Record<string, string[]>; message?: string };
+  | { ok: false; fieldErrors?: Record<string, string[]>; message?: string }
 
 export async function createRecipe(
-  input: CreateRecipeActionInput
+  input: CreateRecipeActionInput,
 ): Promise<CreateRecipeResult> {
   try {
-    const data = createRecipeActionSchema.parse(input);
+    const data = createRecipeActionSchema.parse(input)
 
-    const recipeId = nanoid();
-    const now = new Date();
+    const recipeId = nanoid()
+    const now = new Date()
 
     await db.insert(recipes).values({
       id: recipeId,
@@ -53,7 +53,7 @@ export async function createRecipe(
       notes: data.notes ?? null,
       createdAt: now,
       updatedAt: now,
-    });
+    })
 
     if (data.fermentables.length > 0) {
       const fermentableIngredients = await db
@@ -63,18 +63,18 @@ export async function createRecipe(
           and(
             inArray(
               ingredients.name,
-              data.fermentables.map((item) => item.ingredientName)
+              data.fermentables.map((item) => item.ingredientName),
             ),
-            eq(ingredients.kind, "fermentable")
-          )
-        );
+            eq(ingredients.kind, "fermentable"),
+          ),
+        )
 
       const fermentableNameToId = new Map(
         fermentableIngredients.map((ingredient) => [
           ingredient.name,
           ingredient.id,
-        ])
-      );
+        ]),
+      )
 
       for (const item of data.fermentables) {
         if (!fermentableNameToId.has(item.ingredientName)) {
@@ -83,7 +83,7 @@ export async function createRecipe(
             fieldErrors: {
               fermentables: [`Unknown fermentable: ${item.ingredientName}`],
             },
-          };
+          }
         }
       }
 
@@ -95,8 +95,8 @@ export async function createRecipe(
           amountKg: item.amountKg,
           createdAt: now,
           updatedAt: now,
-        }))
-      );
+        })),
+      )
     }
 
     if (data.hops.length > 0) {
@@ -107,15 +107,15 @@ export async function createRecipe(
           and(
             inArray(
               ingredients.name,
-              data.hops.map((item) => item.ingredientName)
+              data.hops.map((item) => item.ingredientName),
             ),
-            eq(ingredients.kind, "hop")
-          )
-        );
+            eq(ingredients.kind, "hop"),
+          ),
+        )
 
       const hopNameToId = new Map(
-        hopIngredients.map((ingredient) => [ingredient.name, ingredient.id])
-      );
+        hopIngredients.map((ingredient) => [ingredient.name, ingredient.id]),
+      )
 
       for (const item of data.hops) {
         if (!hopNameToId.has(item.ingredientName)) {
@@ -124,7 +124,7 @@ export async function createRecipe(
             fieldErrors: {
               hops: [`Unknown hop: ${item.ingredientName}`],
             },
-          };
+          }
         }
       }
 
@@ -138,8 +138,8 @@ export async function createRecipe(
           type: item.type,
           createdAt: now,
           updatedAt: now,
-        }))
-      );
+        })),
+      )
     }
 
     if (data.yeast) {
@@ -149,10 +149,10 @@ export async function createRecipe(
         .where(
           and(
             eq(ingredients.name, data.yeast.ingredientName),
-            eq(ingredients.kind, "yeast")
-          )
+            eq(ingredients.kind, "yeast"),
+          ),
         )
-        .limit(1);
+        .limit(1)
 
       if (yeastIngredient.length === 0) {
         return {
@@ -160,7 +160,7 @@ export async function createRecipe(
           fieldErrors: {
             yeast: [`Unknown yeast: ${data.yeast.ingredientName}`],
           },
-        };
+        }
       }
 
       await db.insert(recipeYeast).values({
@@ -170,7 +170,7 @@ export async function createRecipe(
         pitchAmount: data.yeast.pitchAmount,
         createdAt: now,
         updatedAt: now,
-      });
+      })
     }
 
     if (data.waterAdditions.length > 0) {
@@ -181,13 +181,13 @@ export async function createRecipe(
             fieldErrors: {
               waterAdditions: [`Unknown salt: ${addition.name}`],
             },
-          };
+          }
         }
       }
 
       await db.insert(recipeWaterAdditions).values(
         data.waterAdditions.flatMap((item) => {
-          const composition = SALT_COMPOSITIONS[item.name];
+          const composition = SALT_COMPOSITIONS[item.name]
           return Object.keys(composition).map((ionType) => ({
             id: nanoid(),
             recipeId,
@@ -196,9 +196,9 @@ export async function createRecipe(
             ionType,
             createdAt: now,
             updatedAt: now,
-          }));
-        })
-      );
+          }))
+        }),
+      )
     }
 
     if (data.mashSteps.length > 0) {
@@ -211,24 +211,24 @@ export async function createRecipe(
           durationMin: item.timeMin,
           createdAt: now,
           updatedAt: now,
-        }))
-      );
+        })),
+      )
     }
 
-    revalidatePath("/recipes");
-    return { ok: true, recipeId };
+    revalidatePath("/recipes")
+    return { ok: true, recipeId }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { ok: false, fieldErrors: error.flatten().fieldErrors };
+      return { ok: false, fieldErrors: error.flatten().fieldErrors }
     }
 
-    console.error("Failed to create recipe:", error);
-    return { ok: false, message: "Unexpected error creating recipe" };
+    console.error("Failed to create recipe:", error)
+    return { ok: false, message: "Unexpected error creating recipe" }
   }
 }
 
 export async function updateRecipe(recipeId: string, formData: FormData) {
-  const now = new Date();
+  const now = new Date()
 
   const recipeData = {
     name: formData.get("name") as string,
@@ -242,34 +242,34 @@ export async function updateRecipe(recipeId: string, formData: FormData) {
       parseFloat(formData.get("hopUtilizationMultiplier") as string) || 1.0,
     notes: formData.get("notes") as string,
     updatedAt: now,
-  };
+  }
 
-  await db.update(recipes).set(recipeData).where(eq(recipes.id, recipeId));
+  await db.update(recipes).set(recipeData).where(eq(recipes.id, recipeId))
 
-  revalidatePath(`/recipes/${recipeId}`);
-  revalidatePath("/recipes");
+  revalidatePath(`/recipes/${recipeId}`)
+  revalidatePath("/recipes")
 }
 
 export async function deleteRecipe(recipeId: string) {
   // Delete related records first (due to foreign key constraints)
   await db
     .delete(recipeFermentables)
-    .where(eq(recipeFermentables.recipeId, recipeId));
-  await db.delete(recipeHops).where(eq(recipeHops.recipeId, recipeId));
-  await db.delete(recipeYeast).where(eq(recipeYeast.recipeId, recipeId));
+    .where(eq(recipeFermentables.recipeId, recipeId))
+  await db.delete(recipeHops).where(eq(recipeHops.recipeId, recipeId))
+  await db.delete(recipeYeast).where(eq(recipeYeast.recipeId, recipeId))
   await db
     .delete(recipeWaterAdditions)
-    .where(eq(recipeWaterAdditions.recipeId, recipeId));
+    .where(eq(recipeWaterAdditions.recipeId, recipeId))
   await db
     .delete(recipeOtherAdditions)
-    .where(eq(recipeOtherAdditions.recipeId, recipeId));
-  await db.delete(mashSteps).where(eq(mashSteps.recipeId, recipeId));
+    .where(eq(recipeOtherAdditions.recipeId, recipeId))
+  await db.delete(mashSteps).where(eq(mashSteps.recipeId, recipeId))
 
   // Delete recipe
-  await db.delete(recipes).where(eq(recipes.id, recipeId));
+  await db.delete(recipes).where(eq(recipes.id, recipeId))
 
-  revalidatePath("/recipes");
-  redirect("/recipes");
+  revalidatePath("/recipes")
+  redirect("/recipes")
 }
 
 export async function duplicateRecipe() {
@@ -278,5 +278,5 @@ export async function duplicateRecipe() {
   // 1. Fetch the original recipe and all related data
   // 2. Create new records with new IDs
   // 3. Update the name to indicate it's a copy
-  throw new Error("Recipe duplication not yet implemented");
+  throw new Error("Recipe duplication not yet implemented")
 }

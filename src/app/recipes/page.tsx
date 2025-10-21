@@ -3,26 +3,26 @@
  * Lists all recipes with quick stats and actions
  */
 
-import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { ButtonGroup } from "@/components/ui/button-group"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/ui/card"
 import {
   Empty,
+  EmptyContent,
+  EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-  EmptyDescription,
-  EmptyContent,
-} from "@/components/ui/empty";
-import { Plus, Edit, Copy, Calendar, Beer } from "lucide-react";
-import Link from "next/link";
+} from "@/components/ui/empty"
+import { Beer, Calendar, Copy, Edit, Plus } from "lucide-react"
+import Link from "next/link"
 
 // Mock data for now - will be replaced with real data fetching
 const mockRecipes = [
@@ -48,7 +48,7 @@ const mockRecipes = [
     srm: 3.5,
     lastBrewed: null,
   },
-];
+]
 
 export default function RecipesPage() {
   return (
@@ -152,5 +152,5 @@ export default function RecipesPage() {
         </Empty>
       )}
     </div>
-  );
+  )
 }

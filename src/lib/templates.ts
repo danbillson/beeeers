@@ -1,81 +1,81 @@
 export type IngredientRef = {
-  name: string;
-  amount?: string;
-  description?: string;
-  usage?: string;
-};
+  name: string
+  amount?: string
+  description?: string
+  usage?: string
+}
 
 export type ProcessStep = {
-  title: string;
-  target: string;
-  notes?: string;
-};
+  title: string
+  target: string
+  notes?: string
+}
 
-export type Range = { min: number; max: number; unit: string };
+export type Range = { min: number; max: number; unit: string }
 
 export type BeerStyleTemplate = {
-  id: string;
-  name: string;
-  styleFamily: "ale" | "lager" | "stout" | "mixed-fermentation" | "other";
+  id: string
+  name: string
+  styleFamily: "ale" | "lager" | "stout" | "mixed-fermentation" | "other"
   bjcp?: {
-    category: string;
-    code: string;
-  };
-  description: string;
+    category: string
+    code: string
+  }
+  description: string
   sensoryProfile: {
-    aroma: string;
-    flavor: string;
-    appearance: string;
-    mouthfeel: string;
-    overallImpression?: string;
-  };
+    aroma: string
+    flavor: string
+    appearance: string
+    mouthfeel: string
+    overallImpression?: string
+  }
   vitalStats: {
-    og: Range;
-    fg: Range;
-    abv: Range;
-    ibu: Range;
-    srm: Range;
-    attenuation?: Range;
-    carbonationVolumes?: Range;
-  };
+    og: Range
+    fg: Range
+    abv: Range
+    ibu: Range
+    srm: Range
+    attenuation?: Range
+    carbonationVolumes?: Range
+  }
   recommendedRecipe: {
-    defaultBatchSizeL: number;
-    method: "all-grain" | "partial" | "extract";
-    efficiencyPct?: number;
-    hopUtilizationMultiplier?: number;
-    boilTimeMin?: number;
-    mashProfile: ProcessStep[];
-    fermentationProfile: ProcessStep[];
-    conditioningProfile?: ProcessStep[];
-  };
+    defaultBatchSizeL: number
+    method: "all-grain" | "partial" | "extract"
+    efficiencyPct?: number
+    hopUtilizationMultiplier?: number
+    boilTimeMin?: number
+    mashProfile: ProcessStep[]
+    fermentationProfile: ProcessStep[]
+    conditioningProfile?: ProcessStep[]
+  }
   waterProfile?: {
-    baseProfileId?: string;
+    baseProfileId?: string
     preferredIonTargets?: Record<
       "ca" | "mg" | "na" | "cl" | "so4" | "hco3",
       number | Range
-    >;
-    adjustments?: string[];
-  };
+    >
+    adjustments?: string[]
+  }
   keyIngredients: {
-    baseMalts: IngredientRef[];
-    specialtyMalts?: IngredientRef[];
-    adjuncts?: IngredientRef[];
-    hops: IngredientRef[];
-    yeast: IngredientRef[];
-    other?: IngredientRef[];
-  };
+    baseMalts: IngredientRef[]
+    specialtyMalts?: IngredientRef[]
+    adjuncts?: IngredientRef[]
+    hops: IngredientRef[]
+    yeast: IngredientRef[]
+    other?: IngredientRef[]
+  }
   processGuidance?: {
-    tips: string[];
-    pitfalls?: string[];
-    variations?: string[];
-    foodPairings?: string[];
-  };
+    tips: string[]
+    pitfalls?: string[]
+    variations?: string[]
+    foodPairings?: string[]
+  }
   references?: {
-    title: string;
-    url: string;
-    note?: string;
-  }[];
-};
+    title: string
+    url: string
+    note?: string
+  }[]
+}
 
 export const beerStyleTemplates = {
   "american-pale-ale": {
@@ -781,4 +781,4 @@ export const beerStyleTemplates = {
       ],
     },
   },
-} satisfies Record<string, BeerStyleTemplate>;
+} satisfies Record<string, BeerStyleTemplate>

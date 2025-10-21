@@ -1,8 +1,8 @@
-import { z } from "zod";
+import { z } from "zod"
 
-export const hopTypeValues = ["boil", "whirlpool", "dry-hop"] as const;
-export const recipeMethodValues = ["all-grain", "extract", "partial"] as const;
-export const mashStepTypeValues = ["strike", "sparge", "mashout"] as const;
+export const hopTypeValues = ["boil", "whirlpool", "dry-hop"] as const
+export const recipeMethodValues = ["all-grain", "extract", "partial"] as const
+export const mashStepTypeValues = ["strike", "sparge", "mashout"] as const
 
 export const createRecipeActionSchema = z.object({
   userId: z.string().min(1, "User is required"),
@@ -20,7 +20,7 @@ export const createRecipeActionSchema = z.object({
       z.object({
         ingredientName: z.string().min(1, "Fermentable ingredient is required"),
         amountKg: z.number().positive("Amount must be greater than 0"),
-      })
+      }),
     )
     .default([]),
   hops: z
@@ -30,7 +30,7 @@ export const createRecipeActionSchema = z.object({
         amountG: z.number().positive("Amount must be greater than 0"),
         timeMin: z.number().min(0),
         type: z.enum(hopTypeValues),
-      })
+      }),
     )
     .default([]),
   yeast: z
@@ -44,7 +44,7 @@ export const createRecipeActionSchema = z.object({
       z.object({
         name: z.string().min(1, "Salt name is required"),
         amountG: z.number().min(0),
-      })
+      }),
     )
     .default([]),
   mashSteps: z
@@ -53,9 +53,9 @@ export const createRecipeActionSchema = z.object({
         stepType: z.enum(mashStepTypeValues),
         temperatureC: z.number().min(0),
         timeMin: z.number().min(0),
-      })
+      }),
     )
     .default([]),
-});
+})
 
-export type CreateRecipeActionInput = z.infer<typeof createRecipeActionSchema>;
+export type CreateRecipeActionInput = z.infer<typeof createRecipeActionSchema>

@@ -2,7 +2,7 @@
  * Zod validation schemas for brewing data
  */
 
-import { z } from "zod";
+import { z } from "zod"
 
 // Ingredient validation
 export const ingredientSchema = z.object({
@@ -18,7 +18,7 @@ export const ingredientSchema = z.object({
   description: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
-});
+})
 
 // Recipe fermentable
 export const recipeFermentableSchema = z.object({
@@ -28,7 +28,7 @@ export const recipeFermentableSchema = z.object({
   amountKg: z.number().min(0),
   createdAt: z.date(),
   updatedAt: z.date(),
-});
+})
 
 // Recipe hop
 export const recipeHopSchema = z.object({
@@ -40,7 +40,7 @@ export const recipeHopSchema = z.object({
   type: z.enum(["boil", "whirlpool", "dry-hop"]),
   createdAt: z.date(),
   updatedAt: z.date(),
-});
+})
 
 // Recipe yeast
 export const recipeYeastSchema = z.object({
@@ -50,7 +50,7 @@ export const recipeYeastSchema = z.object({
   pitchAmount: z.number().min(0).optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
-});
+})
 
 // Water addition
 export const waterAdditionSchema = z.object({
@@ -61,7 +61,7 @@ export const waterAdditionSchema = z.object({
   ionType: z.string().min(1),
   createdAt: z.date(),
   updatedAt: z.date(),
-});
+})
 
 // Other addition
 export const otherAdditionSchema = z.object({
@@ -73,7 +73,7 @@ export const otherAdditionSchema = z.object({
   notes: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
-});
+})
 
 // Mash step
 export const mashStepSchema = z.object({
@@ -84,7 +84,7 @@ export const mashStepSchema = z.object({
   durationMin: z.number().min(0),
   createdAt: z.date(),
   updatedAt: z.date(),
-});
+})
 
 // Recipe schema
 export const recipeSchema = z.object({
@@ -101,7 +101,7 @@ export const recipeSchema = z.object({
   notes: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
-});
+})
 
 // Create recipe input schema (for forms)
 export const createRecipeInputSchema = z.object({
@@ -114,16 +114,16 @@ export const createRecipeInputSchema = z.object({
   boilTimeMin: z.number().min(0, "Boil time must be positive"),
   hopUtilizationMultiplier: z.number().min(0).default(1.0),
   notes: z.string().optional(),
-});
+})
 
 // Export TypeScript types
-export type Ingredient = z.infer<typeof ingredientSchema>;
-export type RecipeFermentable = z.infer<typeof recipeFermentableSchema>;
-export type RecipeHop = z.infer<typeof recipeHopSchema>;
-export type RecipeYeast = z.infer<typeof recipeYeastSchema>;
-export type WaterAddition = z.infer<typeof waterAdditionSchema>;
-export type OtherAddition = z.infer<typeof otherAdditionSchema>;
-export type MashStep = z.infer<typeof mashStepSchema>;
-export type Recipe = z.infer<typeof recipeSchema>;
+export type Ingredient = z.infer<typeof ingredientSchema>
+export type RecipeFermentable = z.infer<typeof recipeFermentableSchema>
+export type RecipeHop = z.infer<typeof recipeHopSchema>
+export type RecipeYeast = z.infer<typeof recipeYeastSchema>
+export type WaterAddition = z.infer<typeof waterAdditionSchema>
+export type OtherAddition = z.infer<typeof otherAdditionSchema>
+export type MashStep = z.infer<typeof mashStepSchema>
+export type Recipe = z.infer<typeof recipeSchema>
 
-export type CreateRecipeInput = z.infer<typeof createRecipeInputSchema>;
+export type CreateRecipeInput = z.infer<typeof createRecipeInputSchema>

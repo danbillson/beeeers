@@ -1,12 +1,12 @@
 import {
   boolean,
+  integer,
+  pgEnum,
   pgTable,
+  real,
   text,
   timestamp,
-  integer,
-  real,
-  pgEnum,
-} from "drizzle-orm/pg-core";
+} from "drizzle-orm/pg-core"
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -16,7 +16,7 @@ export const user = pgTable("user", {
   image: text("image"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
-});
+})
 
 export const session = pgTable("session", {
   id: text("id").primaryKey(),
@@ -29,7 +29,7 @@ export const session = pgTable("session", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-});
+})
 
 export const account = pgTable("account", {
   id: text("id").primaryKey(),
@@ -47,7 +47,7 @@ export const account = pgTable("account", {
   password: text("password"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
-});
+})
 
 export const verification = pgTable("verification", {
   id: text("id").primaryKey(),
@@ -56,7 +56,7 @@ export const verification = pgTable("verification", {
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
-});
+})
 
 // Enums
 export const ingredientKindEnum = pgEnum("ingredient_kind", [
@@ -64,15 +64,15 @@ export const ingredientKindEnum = pgEnum("ingredient_kind", [
   "hop",
   "yeast",
   "adjunct",
-]);
+])
 
 export const recipeMethodEnum = pgEnum("recipe_method", [
   "all-grain",
   "extract",
   "partial",
-]);
+])
 
-export const hopTypeEnum = pgEnum("hop_type", ["boil", "whirlpool", "dry-hop"]);
+export const hopTypeEnum = pgEnum("hop_type", ["boil", "whirlpool", "dry-hop"])
 
 // Ingredients table
 export const ingredients = pgTable("ingredients", {
@@ -88,7 +88,7 @@ export const ingredients = pgTable("ingredients", {
   description: text("description"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
-});
+})
 
 // Recipes table
 export const recipes = pgTable("recipes", {
@@ -107,7 +107,7 @@ export const recipes = pgTable("recipes", {
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
-});
+})
 
 // Recipe fermentables junction table
 export const recipeFermentables = pgTable("recipe_fermentables", {
@@ -121,7 +121,7 @@ export const recipeFermentables = pgTable("recipe_fermentables", {
   amountKg: real("amount_kg").notNull(),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
-});
+})
 
 // Recipe hops junction table
 export const recipeHops = pgTable("recipe_hops", {
@@ -137,7 +137,7 @@ export const recipeHops = pgTable("recipe_hops", {
   type: hopTypeEnum("type").notNull(),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
-});
+})
 
 // Recipe yeast junction table
 export const recipeYeast = pgTable("recipe_yeast", {
@@ -151,7 +151,7 @@ export const recipeYeast = pgTable("recipe_yeast", {
   pitchAmount: real("pitch_amount"), // Grams or cells
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
-});
+})
 
 // Recipe water additions
 export const recipeWaterAdditions = pgTable("recipe_water_additions", {
@@ -164,7 +164,7 @@ export const recipeWaterAdditions = pgTable("recipe_water_additions", {
   ionType: text("ion_type").notNull(), // Ca, Mg, Na, Cl, SO4, HCO3
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
-});
+})
 
 // Recipe other additions
 export const recipeOtherAdditions = pgTable("recipe_other_additions", {
@@ -178,7 +178,7 @@ export const recipeOtherAdditions = pgTable("recipe_other_additions", {
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
-});
+})
 
 // Mash steps
 export const mashSteps = pgTable("mash_steps", {
@@ -191,4 +191,4 @@ export const mashSteps = pgTable("mash_steps", {
   durationMin: integer("duration_min").notNull(),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
-});
+})
