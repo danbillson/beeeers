@@ -19,13 +19,7 @@ import {
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RecipeStatsBar } from "@/components/recipe-stats";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardAction,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -512,12 +506,7 @@ export default function NewRecipePage() {
     }
   }, [isSessionPending, sessionData, router]);
 
-  // Auto-open template dialog on first load if form is empty
-  useEffect(() => {
-    if (!formState.name && !isTemplateDialogOpen && sessionData) {
-      setIsTemplateDialogOpen(true);
-    }
-  }, [formState.name, isTemplateDialogOpen, sessionData]);
+  // Removed auto-open of template dialog; dialog opens only via button
 
   function handleSave() {
     const userId = sessionData?.user?.id;
@@ -989,14 +978,24 @@ export default function NewRecipePage() {
           <h1 className="text-3xl font-bold">New Recipe</h1>
           <p className="text-muted-foreground">Create a new brewing recipe</p>
         </div>
-        <Button onClick={handleSave} disabled={isPending || isSessionPending}>
-          {isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="mr-2 h-4 w-4" />
-          )}
-          {isPending ? "Saving..." : "Save Recipe"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsTemplateDialogOpen(true)}
+            disabled={isPending || isSessionPending}
+          >
+            <Sparkles className="mr-2 h-4 w-4" />
+            Choose Template
+          </Button>
+          <Button onClick={handleSave} disabled={isPending || isSessionPending}>
+            {isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
+            {isPending ? "Saving..." : "Save Recipe"}
+          </Button>
+        </div>
       </div>
 
       {/* Two Column Layout */}
@@ -1007,16 +1006,6 @@ export default function NewRecipePage() {
           <Card>
             <CardHeader>
               <CardTitle>Recipe Info</CardTitle>
-              <CardAction>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsTemplateDialogOpen(true)}
-                >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Choose Template
-                </Button>
-              </CardAction>
             </CardHeader>
             <CardContent className="space-y-4">
               <Field>

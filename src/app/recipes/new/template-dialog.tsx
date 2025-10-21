@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, XIcon } from "lucide-react";
 
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 import { beerStyleTemplates, type BeerStyleTemplate } from "@/lib/templates";
 import {
   InputGroup,
@@ -31,6 +32,7 @@ type TemplateDialogProps = {
 const FAMILY_LABELS: Record<BeerStyleTemplate["styleFamily"], string> = {
   ale: "Ale",
   lager: "Lager",
+  stout: "Stout",
   "mixed-fermentation": "Mixed Fermentation",
   other: "Specialty & Other",
 };
@@ -45,15 +47,20 @@ export function TemplateDialog({
   onSelectTemplate,
   onStartFromScratch,
 }: TemplateDialogProps) {
-  const familyOptions = useMemo(
-    () =>
-      Array.from(
-        new Set<BeerStyleTemplate["styleFamily"]>(
-          templateList.map((template) => template.styleFamily)
-        )
-      ),
-    []
-  );
+  const familyOptions = useMemo(() => {
+    const ORDER: Record<BeerStyleTemplate["styleFamily"], number> = {
+      ale: 0,
+      lager: 1,
+      stout: 2,
+      "mixed-fermentation": 3,
+      other: 4,
+    };
+    return Array.from(
+      new Set<BeerStyleTemplate["styleFamily"]>(
+        templateList.map((template) => template.styleFamily)
+      )
+    ).sort((a, b) => ORDER[a] - ORDER[b]);
+  }, []);
 
   const [selectedFamilies, setSelectedFamilies] = useState<
     BeerStyleTemplate["styleFamily"][]
@@ -107,15 +114,16 @@ export function TemplateDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="overflow-hidden p-0 max-w-[min(800px,calc(100%-2rem))] sm:max-w-[800px]">
+      <DialogContent showCloseButton={false} className="overflow-hidden p-0 max-w-[min(800px,calc(100%-2rem))] sm:max-w-[800px]">
         <div className="flex h-[680px] flex-col">
-          <DialogHeader className="border-b px-6 py-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1.5">
-                <DialogTitle className="text-xl font-semibold">
-                  Templates
-                </DialogTitle>
-              </div>
+          <DialogHeader className="border-b px-6 py-3">
+            <div className="flex items-center justify-between gap-4">
+              <DialogTitle className="text-lg font-semibold">Templates</DialogTitle>
+              <DialogClose asChild>
+                <Button variant="ghost" size="icon" aria-label="Close templates">
+                  <XIcon className="size-4" />
+                </Button>
+              </DialogClose>
             </div>
           </DialogHeader>
 
@@ -129,39 +137,37 @@ export function TemplateDialog({
                     </p>
                   </div>
                   {familyOptions.map((family) => {
-                    const isActive = selectedFamilies.includes(family);
+                    const isChecked = selectedFamilies.includes(family);
                     const label =
                       FAMILY_LABELS[family as keyof typeof FAMILY_LABELS] ??
                       family;
 
                     return (
-                      <Button
+                      <label
                         key={family}
-                        variant="ghost"
-                        size="sm"
-                        className={`w-full justify-start font-normal ${
-                          isActive
-                            ? "bg-accent text-accent-foreground"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                        onClick={() => {
-                          setSelectedFamilies((previous) => {
-                            if (previous.includes(family)) {
-                              const next = previous.filter(
-                                (item) => item !== family
-                              );
-                              return next.length > 0 ? next : previous;
-                            }
-
-                            return [...previous, family];
-                          });
-                        }}
+                        className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent/50"
                       >
-                        {isActive && (
-                          <span className="mr-2 text-primary">✓</span>
-                        )}
-                        {label}
-                      </Button>
+                        <Checkbox
+                          checked={isChecked}
+                          onCheckedChange={(checked) => {
+                            setSelectedFamilies((previous) => {
+                              const next = new Set(previous);
+                              const on = Boolean(checked);
+                              if (on) {
+                                next.add(family);
+                              } else {
+                                next.delete(family);
+                                if (next.size === 0) {
+                                  return previous; // prevent zero selections
+                                }
+                              }
+                              return Array.from(next);
+                            });
+                          }}
+                          aria-label={label}
+                        />
+                        <span className="select-none text-foreground">{label}</span>
+                      </label>
                     );
                   })}
                 </div>
@@ -205,6 +211,8 @@ export function TemplateDialog({
                           ? "Ale"
                           : template.styleFamily === "lager"
                           ? "Lager"
+                          : template.styleFamily === "stout"
+                          ? "Stout"
                           : template.styleFamily === "mixed-fermentation"
                           ? "Mixed"
                           : "Other"}

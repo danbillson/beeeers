@@ -17,7 +17,7 @@ export type BeerStyleTemplate = {
   id: string;
   name: string;
   aliases?: string[];
-  styleFamily: "ale" | "lager" | "mixed-fermentation" | "other";
+  styleFamily: "ale" | "lager" | "stout" | "mixed-fermentation" | "other";
   bjcp?: {
     category: string;
     code: string;
@@ -521,7 +521,7 @@ export const beerStyleTemplates = {
   "english-porter": {
     id: "english-porter",
     name: "English Porter",
-    styleFamily: "ale",
+    styleFamily: "stout",
     bjcp: { category: "13", code: "13C" },
     description:
       "Moderate-strength dark ale with chocolate/toffee complexity and restrained roast.",
@@ -568,7 +568,7 @@ export const beerStyleTemplates = {
   "american-porter": {
     id: "american-porter",
     name: "American Porter",
-    styleFamily: "ale",
+    styleFamily: "stout",
     bjcp: { category: "20", code: "20A" },
     description:
       "Robust porter with more roast and bitterness than English versions.",
@@ -606,7 +606,7 @@ export const beerStyleTemplates = {
   "dry-irish-stout": {
     id: "dry-irish-stout",
     name: "Irish Stout (Dry)",
-    styleFamily: "ale",
+    styleFamily: "stout",
     bjcp: { category: "15", code: "15B" },
     description:
       "Roasty, bitter, and highly drinkable dark ale with a dry finish.",
@@ -654,7 +654,7 @@ export const beerStyleTemplates = {
   "american-stout": {
     id: "american-stout",
     name: "American Stout",
-    styleFamily: "ale",
+    styleFamily: "stout",
     bjcp: { category: "20", code: "20B" },
     description:
       "Bold roast and hop presence; fuller and more bitter than Irish stout.",
